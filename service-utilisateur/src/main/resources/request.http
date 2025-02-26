@@ -1,0 +1,14 @@
+### Créer un utilisateur
+POST /api/auth/login
+Body (JSON):
+{
+    "email": "user@example.com",
+    "password": "password123"
+}
+Response:
+{ "token": "xxxx.yyyy.zzzz" }
+
+### Récupérer les informations de l'utilisateur connecté
+GET /api/utilisateurs/me
+Headers:
+Authorization: Bearer xxxx.yyyy.zzzz
