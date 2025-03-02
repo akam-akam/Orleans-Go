@@ -34,3 +34,49 @@ management:
     web:
       exposure:
         include: health,info,metrics
+server:
+  port: 8082
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: service-conducteur
+  datasource:
+    url: jdbc:postgresql://database:5432/orleansgo_conducteur
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  cloud:
+    discovery:
+      enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.orleansgo.conducteur: INFO
+    org.springframework: INFO
+    org.hibernate: INFO

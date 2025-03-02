@@ -1,6 +1,19 @@
 version: '3.8'
 
 services:
+  service-conducteur:
+    build: ./service-conducteur
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/orleansgo_conducteur
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - database
+      - eureka-server
   # Services de base de données
   postgres:
     image: postgres:14-alpine

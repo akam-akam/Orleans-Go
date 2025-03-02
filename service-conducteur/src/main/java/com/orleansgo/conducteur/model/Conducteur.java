@@ -52,3 +52,62 @@ public class Conducteur {
         return this.documentsValides;
     }
 }
+package com.orleansgo.conducteur.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "conducteurs")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Conducteur {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private Long utilisateurId;
+    
+    private String numeroPermis;
+    
+    private LocalDateTime dateExpirationPermis;
+    
+    private boolean documentsValides;
+    
+    private boolean disponible;
+    
+    @Enumerated(EnumType.STRING)
+    private StatutConducteur statut;
+    
+    private Double latitude;
+    
+    private Double longitude;
+    
+    private LocalDateTime dernierePosition;
+    
+    private Double noteGlobale;
+    
+    private Integer nombreCourses;
+    
+    private Integer nombreAvis;
+    
+    @OneToMany(mappedBy = "conducteur", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Document> documents = new HashSet<>();
+    
+    @OneToMany(mappedBy = "conducteur", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<VehiculeConducteur> vehicules = new HashSet<>();
+    
+    private LocalDateTime dateCreation;
+    
+    private LocalDateTime dateModification;
+}

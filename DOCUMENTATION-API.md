@@ -46,16 +46,21 @@ Base URL: `http://localhost:8082/api`
 | --- | --- | --- |
 | GET | `/conducteurs` | Récupération de tous les conducteurs |
 | GET | `/conducteurs/{id}` | Récupération d'un conducteur par son ID |
+| GET | `/conducteurs/utilisateur/{utilisateurId}` | Récupération d'un conducteur par son ID utilisateur |
 | POST | `/conducteurs` | Création d'un nouveau conducteur |
 | PUT | `/conducteurs/{id}` | Mise à jour d'un conducteur |
-| DELETE | `/conducteurs/{id}` | Suppression d'un conducteur |
-| POST | `/conducteurs/{id}/documents` | Envoi de documents pour vérification |
+| PATCH | `/conducteurs/{id}/statut` | Mise à jour du statut d'un conducteur |
+| PATCH | `/conducteurs/{id}/position` | Mise à jour de la position d'un conducteur |
+| PATCH | `/conducteurs/{id}/disponibilite` | Mise à jour de la disponibilité d'un conducteur |
+| GET | `/conducteurs/disponibles` | Récupération des conducteurs disponibles |
+| GET | `/conducteurs/proximite` | Recherche des conducteurs à proximité |
 | GET | `/conducteurs/{id}/documents` | Récupération des documents d'un conducteur |
-| PUT | `/conducteurs/{id}/documents/{documentId}` | Mise à jour du statut d'un document |
+| POST | `/conducteurs/{id}/documents` | Ajout d'un document pour un conducteur |
+| PATCH | `/documents/{id}/validation` | Validation ou rejet d'un document |
 | GET | `/conducteurs/{id}/vehicules` | Récupération des véhicules d'un conducteur |
 | POST | `/conducteurs/{id}/vehicules` | Ajout d'un véhicule pour un conducteur |
-| PUT | `/conducteurs/{id}/vehicules/{vehiculeId}` | Mise à jour d'un véhicule |
-| DELETE | `/conducteurs/{id}/vehicules/{vehiculeId}` | Suppression d'un véhicule |
+| PATCH | `/conducteurs/{id}/vehicules/{vehiculeId}/principal` | Définir un véhicule comme principal |
+| PATCH | `/vehicules/{id}/statut` | Changement du statut d'un véhicule |
 
 ## Service Trajet
 
