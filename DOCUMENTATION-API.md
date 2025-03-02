@@ -1,4 +1,3 @@
-
 # Documentation API - OrleansGO
 
 ## Introduction
@@ -14,6 +13,10 @@ Ce document décrit les différentes API REST exposées par les microservices Or
 5. [Service Notification](#service-notification)
 6. [Service Administrateur](#service-administrateur)
 7. [Service Support](#service-support)
+8. [Service WebSocket](#service-websocket)
+9. [Service Vérification](#service-verification)
+10. [Service Parrainage](#service-parrainage)
+
 
 ## Service Utilisateur
 
@@ -83,12 +86,15 @@ Base URL: `http://localhost:8084/api`
 | --- | --- | --- |
 | GET | `/paiements` | Récupération de tous les paiements |
 | GET | `/paiements/{id}` | Récupération d'un paiement par son ID |
+| GET | `/paiements/utilisateur/{userId}` | Récupération des paiements d'un utilisateur |
+| GET | `/paiements/trajet/{trajetId}` | Récupération des paiements pour un trajet |
 | POST | `/paiements` | Création d'un nouveau paiement |
-| PUT | `/paiements/{id}` | Mise à jour d'un paiement |
-| POST | `/paiements/{id}/refund` | Remboursement d'un paiement |
-| GET | `/portefeuilles/{userId}` | Récupération du portefeuille d'un utilisateur |
-| POST | `/portefeuilles/{userId}/credit` | Crédit du portefeuille d'un utilisateur |
-| POST | `/portefeuilles/{userId}/debit` | Débit du portefeuille d'un utilisateur |
+| PUT | `/paiements/{id}/confirmer` | Confirmation d'un paiement |
+| PUT | `/paiements/{id}/annuler` | Annulation d'un paiement |
+| GET | `/transactions` | Récupération de toutes les transactions |
+| GET | `/transactions/{id}` | Récupération d'une transaction par son ID |
+| GET | `/transactions/utilisateur/{userId}` | Récupération des transactions d'un utilisateur |
+| POST | `/transactions/retrait` | Demande de retrait de fonds |
 
 ## Service Notification
 
@@ -155,3 +161,55 @@ Base URL: `http://localhost:8087/api`
 | POST | `/faq` | Création d'une nouvelle question fréquente |
 | PUT | `/faq/{id}` | Mise à jour d'une question fréquente |
 | DELETE | `/faq/{id}` | Suppression d'une question fréquente |
+
+## Service WebSocket
+
+Base URL: `ws://localhost:8083/ws`
+
+### Topics
+
+| Topic | Description |
+| --- | --- |
+| `/topic/trajets/{trajetId}` | Suivi en temps réel d'un trajet |
+| `/topic/chauffeurs/{chauffeurId}/position` | Position en temps réel d'un chauffeur |
+| `/topic/utilisateurs/{userId}/notifications` | Notifications en temps réel pour un utilisateur |
+
+### Publication (envoi)
+
+| Destination | Description |
+| --- | --- |
+| `/app/position` | Mise à jour de la position d'un chauffeur |
+| `/app/trajet/statut` | Mise à jour du statut d'un trajet |
+
+## Service Vérification
+
+Base URL: `http://localhost:8086/api`
+
+### Endpoints
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| GET | `/verifications` | Récupération de toutes les vérifications de documents |
+| GET | `/verifications/{id}` | Récupération d'une vérification par son ID |
+| GET | `/verifications/chauffeur/{chauffeurId}` | Récupération des vérifications d'un chauffeur |
+| GET | `/verifications/en-attente` | Récupération des vérifications en attente |
+| POST | `/verifications` | Création d'une nouvelle demande de vérification |
+| PUT | `/verifications/{id}` | Mise à jour d'une vérification |
+
+## Service Parrainage
+
+Base URL: `http://localhost:8086/api`
+
+### Endpoints
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| GET | `/parrainages/programmes` | Récupération de tous les programmes de parrainage |
+| GET | `/parrainages/programmes/{id}` | Récupération d'un programme par son ID |
+| GET | `/parrainages/programmes/actif` | Récupération du programme actif |
+| POST | `/parrainages/programmes` | Création d'un nouveau programme |
+| PUT | `/parrainages/programmes/{id}` | Mise à jour d'un programme |
+| PUT | `/parrainages/programmes/{id}/cloturer` | Clôture d'un programme |
+| GET | `/parrainages/utilisateur/{userId}` | Récupération des parrainages d'un utilisateur |
+| POST | `/parrainages/inviter` | Inviter un ami par email |
+| POST | `/parrainages/valider` | Valider un code de parrainage |

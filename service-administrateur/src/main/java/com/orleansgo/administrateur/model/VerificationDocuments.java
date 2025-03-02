@@ -40,3 +40,54 @@ public class VerificationDocuments {
     @Enumerated(EnumType.STRING)
     private StatutVerification statut = StatutVerification.EN_ATTENTE;
 }
+package com.orleansgo.administrateur.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(name = "verification_documents")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class VerificationDocuments {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+    
+    @Column(name = "chauffeur_id", nullable = false)
+    private UUID chauffeurId;
+    
+    @Column(name = "permis_valide")
+    private boolean permisValide;
+    
+    @Column(name = "carte_grise_valide")
+    private boolean carteGriseValide;
+    
+    @Column(name = "assurance_valide")
+    private boolean assuranceValide;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "statut_verification")
+    private StatutVerification statutVerification;
+    
+    @Column(name = "commentaires")
+    private String commentaires;
+    
+    @Column(name = "administrateur_id")
+    private UUID administrateurId;
+    
+    @Column(name = "date_creation")
+    private LocalDateTime dateCreation;
+    
+    @Column(name = "date_verification")
+    private LocalDateTime dateVerification;
+}

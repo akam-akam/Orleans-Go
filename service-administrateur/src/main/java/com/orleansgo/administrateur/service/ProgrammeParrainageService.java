@@ -88,3 +88,120 @@ public class ProgrammeParrainageService {
         return programmeParrainageRepository.save(nouveauProgramme);
     }
 }
+package com.orleansgo.administrateur.service;
+
+import com.orleansgo.administrateur.dto.ProgrammeParrainageDTO;
+import com.orleansgo.administrateur.exception.ResourceNotFoundException;
+import com.orleansgo.administrateur.model.ProgrammeParrainage;
+import com.orleansgo.administrateur.repository.ProgrammeParrainageRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ProgrammeParrainageService {
+
+    private final ProgrammeParrainageRepository programmeParrainageRepository;
+
+    public List<ProgrammeParrainageDTO> getAllProgrammes() {
+        return programmeParrainageRepository.findAll().stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public ProgrammeParrainageDTO getProgrammeById(UUID id) {
+        ProgrammeParrainage programme = programmeParrainageRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Programme de parrainage non trouvé avec l'ID: " + id));
+        return mapToDTO(programme);
+    }
+
+    public ProgrammeParrainageDTO getCurrentProgramme() {
+        ProgrammeParrainage programme = programmeParrainageRepository.findByActifTrue()
+                .orElseThrow(() -> new ResourceNotFoundException("Aucun programme de parrainage actif trouvé"));
+        return mapToDTO(programme);
+    }
+
+    @Transactional
+    public ProgrammeParrainageDTO createProgramme(ProgrammeParrainageDTO programmeDTO) {
+        // Désactiver tous les programmes actifs si on crée un nouveau programme actif
+        if (programmeDTO.isActif()) {
+            programmeParrainageRepository.findByActifTrue()
+                    .ifPresent(programme -> {
+                        programme.setActif(false);
+                        programme.setDateFin(LocalDateTime.now());
+                        programmeParrainageRepository.save(programme);
+                    });
+        }
+
+        ProgrammeParrainage programme = ProgrammeParrainage.builder()
+                .nom(programmeDTO.getNom())
+                .description(programmeDTO.getDescription())
+                .bonusParrain(programmeDTO.getBonusParrain())
+                .bonusFilleul(programmeDTO.getBonusFilleul())
+                .nombreCoursesRequises(programmeDTO.getNombreCoursesRequises())
+                .actif(programmeDTO.isActif())
+                .dateDebut(LocalDateTime.now())
+                .build();
+        
+        ProgrammeParrainage savedProgramme = programmeParrainageRepository.save(programme);
+        return mapToDTO(savedProgramme);
+    }
+
+    @Transactional
+    public ProgrammeParrainageDTO updateProgramme(UUID id, ProgrammeParrainageDTO programmeDTO) {
+        ProgrammeParrainage programme = programmeParrainageRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Programme de parrainage non trouvé avec l'ID: " + id));
+        
+        // Si on active un programme, désactiver les autres
+        if (!programme.isActif() && programmeDTO.isActif()) {
+            programmeParrainageRepository.findByActifTrue()
+                    .ifPresent(activeProgramme -> {
+                        activeProgramme.setActif(false);
+                        activeProgramme.setDateFin(LocalDateTime.now());
+                        programmeParrainageRepository.save(activeProgramme);
+                    });
+        }
+        
+        programme.setNom(programmeDTO.getNom());
+        programme.setDescription(programmeDTO.getDescription());
+        programme.setBonusParrain(programmeDTO.getBonusParrain());
+        programme.setBonusFilleul(programmeDTO.getBonusFilleul());
+        programme.setNombreCoursesRequises(programmeDTO.getNombreCoursesRequises());
+        programme.setActif(programmeDTO.isActif());
+        
+        ProgrammeParrainage updatedProgramme = programmeParrainageRepository.save(programme);
+        return mapToDTO(updatedProgramme);
+    }
+
+    @Transactional
+    public ProgrammeParrainageDTO cloturerProgramme(UUID id) {
+        ProgrammeParrainage programme = programmeParrainageRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Programme de parrainage non trouvé avec l'ID: " + id));
+        
+        programme.setActif(false);
+        programme.setDateFin(LocalDateTime.now());
+        
+        ProgrammeParrainage updatedProgramme = programmeParrainageRepository.save(programme);
+        return mapToDTO(updatedProgramme);
+    }
+
+    private ProgrammeParrainageDTO mapToDTO(ProgrammeParrainage programme) {
+        return ProgrammeParrainageDTO.builder()
+                .id(programme.getId())
+                .nom(programme.getNom())
+                .description(programme.getDescription())
+                .bonusParrain(programme.getBonusParrain())
+                .bonusFilleul(programme.getBonusFilleul())
+                .nombreCoursesRequises(programme.getNombreCoursesRequises())
+                .actif(programme.isActif())
+                .dateDebut(programme.getDateDebut())
+                .dateFin(programme.getDateFin())
+                .build();
+    }
+}
