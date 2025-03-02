@@ -1,0 +1,140 @@
+# Spécifications Fonctionnelles - Plateforme de Ride-sharing
+
+## 1. Vue d'ensemble
+Application de ride-sharing permettant aux passagers de réserver des courses et aux chauffeurs de les accepter, avec suivi en temps réel.
+
+## 2. Services
+
+### 2.1 Service Utilisateur (user-service)
+- Gestion des comptes utilisateurs (passagers et chauffeurs)
+- Authentication et autorisation
+- Vérification des emails et numéros de téléphone
+- Gestion des profils utilisateurs
+- Support 2FA
+- Système de réputation et d'évaluation
+
+### 2.2 Service Chauffeur (driver-service)
+- Gestion des profils chauffeurs
+- Validation des documents (permis, assurance, etc.)
+- Gestion de la disponibilité
+- Suivi de la position en temps réel
+- Gestion des véhicules
+- Calcul des gains et statistiques
+- Système d'évaluation des chauffeurs
+
+### 2.3 Service de Courses (ride-service)
+- Création et gestion des courses
+- Matching passager-chauffeur
+- Calcul d'itinéraire et estimation du temps/prix
+- Suivi en temps réel des courses
+- Historique des courses
+- Gestion des annulations
+
+### 2.4 Service de Paiement (payment-service)
+- Intégration des moyens de paiement
+- Gestion des transactions
+- Calcul des commissions
+- Gestion des remboursements
+- Système de portefeuille électronique
+- Rapports financiers
+
+### 2.5 Service de Notification (notification-service)
+- Notifications push
+- SMS
+- Emails
+- Alertes en temps réel
+
+### 2.6 Service de Référencement (referral-service)
+- Gestion des codes de parrainage
+- Calcul des bonus
+- Attribution des récompenses
+
+### 2.7 Service Support (support-service)
+- Gestion des tickets support
+- Chat en direct
+- FAQ et base de connaissances
+- Gestion des litiges
+
+### 2.8 Service Administratif (admin-service)
+- Interface d'administration
+- Tableaux de bord
+- Gestion des commissions
+- Rapports et analytics
+- Configuration système
+
+## 3. Exigences Techniques
+
+### 3.1 Architecture
+- Architecture microservices
+- Communication asynchrone via événements
+- API RESTful
+- WebSocket pour les mises à jour en temps réel
+
+### 3.2 Base de données
+- PostgreSQL pour les données persistantes
+- Redis pour le cache et les sessions
+- Séparation des données par service
+
+### 3.3 Sécurité
+- Authentification JWT
+- Chiffrement des données sensibles
+- Rate limiting
+- Protection CSRF
+- Validation des entrées
+- Logs d'audit
+
+### 3.4 Performance
+- Temps de réponse < 200ms
+- Disponibilité 99.9%
+- Cache efficace
+- Optimisation des requêtes
+- Scalabilité horizontale
+
+### 3.5 Monitoring
+- Logs centralisés
+- Métriques de performance
+- Alertes
+- Traçabilité des requêtes
+
+## 4. Interactions entre Services
+
+### 4.1 Événements Principaux
+- UserCreated
+- DriverValidated
+- RideRequested
+- RideAccepted
+- RideCompleted
+- PaymentProcessed
+- LocationUpdated
+
+### 4.2 Synchronisation
+- Synchronisation des profils utilisateurs
+- Mise à jour des positions en temps réel
+- État des courses
+- Soldes des portefeuilles
+
+## 5. Phase d'implémentation
+
+### Phase 1 : Core Services
+1. Service Utilisateur
+2. Service Chauffeur
+3. Service de Courses
+4. Service de Paiement
+
+### Phase 2 : Services Support
+1. Service de Notification
+2. Service de Référencement
+3. Service Support
+
+### Phase 3 : Administration et Analytics
+1. Service Administratif
+2. Tableaux de bord
+3. Rapports
+
+## 6. Contraintes et Standards
+- Documentation API avec OpenAPI/Swagger
+- Tests unitaires et d'intégration
+- Code coverage > 80%
+- Gestion des versions API
+- Standards de codage
+- Revue de code obligatoire
