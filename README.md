@@ -34,7 +34,13 @@ OrleansGO est une plateforme de mise en relation entre chauffeurs et passagers p
 - Suivi en temps réel des courses
 - Historique des courses
 - Gestion des annulations
-- Tests: Unitaires
+
+#### Service de Commission (service-commission)
+- Gestion des taux de commission
+- Calcul des commissions sur les trajets
+- Historique des commissions appliquées
+- Statistiques des commissions par chauffeur
+- Rapports sur les commissions par période Tests: Unitaires
 
 #### Service Support (service-support)
 - Gestion des tickets de support

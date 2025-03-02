@@ -158,15 +158,35 @@ Base URL: `http://localhost:8090/api`
 | DELETE | `/vehicules/{id}` | Suppression d'un véhicule |
 | PATCH | `/vehicules/{id}/statut` | Changement du statut d'un véhicule |
 
+## Service Commission
+
+Base URL: `http://localhost:8092/api`
+
 ### Endpoints Commission
 
 | Méthode | URL | Description |
 | --- | --- | --- |
 | GET | `/commissions` | Récupération de toutes les commissions |
+| GET | `/commissions/actives` | Récupération des commissions actives |
 | GET | `/commissions/{id}` | Récupération d'une commission par son ID |
 | POST | `/commissions` | Création d'une commission |
 | PUT | `/commissions/{id}` | Mise à jour d'une commission |
 | DELETE | `/commissions/{id}` | Suppression d'une commission |
+| PATCH | `/commissions/{id}/activate` | Activation d'une commission |
+| PATCH | `/commissions/{id}/deactivate` | Désactivation d'une commission |
+
+### Endpoints Commission Trajet
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| GET | `/commissions-trajets` | Récupération de toutes les commissions appliquées aux trajets |
+| GET | `/commissions-trajets/{id}` | Récupération d'une commission trajet par son ID |
+| GET | `/commissions-trajets/chauffeur/{chauffeurId}` | Récupération des commissions trajets d'un chauffeur |
+| GET | `/commissions-trajets/trajet/{trajetId}` | Récupération des commissions trajets d'un trajet spécifique |
+| GET | `/commissions-trajets/periode` | Récupération des commissions trajets sur une période |
+| GET | `/commissions-trajets/total-periode` | Calcul du total des commissions sur une période |
+| GET | `/commissions-trajets/total-chauffeur/{chauffeurId}` | Calcul du total des commissions pour un chauffeur sur une période |
+| POST | `/commissions-trajets` | Création d'une commission trajet |
 
 ### Endpoints Vérification Documents
 

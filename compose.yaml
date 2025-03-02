@@ -218,6 +218,23 @@ services:
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     networks:
       - orleansgo-network
+      
+  service-commission:
+    build: ./service-commission
+    ports:
+      - "8092:8092"
+    depends_on:
+      - postgres
+      - discovery-server
+      - config-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/commission_db
+      SPRING_DATASOURCE_USERNAME: orleansgo
+      SPRING_DATASOURCE_PASSWORD: orleansgo
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    networks:
+      - orleansgo-networkrk
 
 networks:
   orleansgo-network:
