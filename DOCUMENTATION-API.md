@@ -177,6 +177,13 @@ Base URL: `http://localhost:8087/api`
 
 | Méthode | URL | Description |
 | --- | --- | --- |
+| GET | `/statistiques` | Récupération de toutes les statistiques |
+| GET | `/statistiques/{id}` | Récupération d'une statistique par son ID |
+| GET | `/statistiques/type/{type}` | Récupération des statistiques par type |
+| GET | `/statistiques/periode` | Récupération des statistiques par période |
+| POST | `/statistiques` | Création d'une nouvelle statistique |
+| PUT | `/statistiques/{id}` | Mise à jour d'une statistique |
+| DELETE | `/statistiques/{id}` | Suppression d'une statistique |
 | GET | `/statistiques/courses` | Récupération des statistiques sur les courses |
 | GET | `/statistiques/chauffeurs` | Récupération des statistiques sur les chauffeurs |
 | GET | `/statistiques/utilisateurs` | Récupération des statistiques sur les utilisateurs |
@@ -186,9 +193,14 @@ Base URL: `http://localhost:8087/api`
 
 | Méthode | URL | Description |
 | --- | --- | --- |
+| POST | `/audit` | Création d'un nouvel enregistrement d'audit |
 | GET | `/audit/user/{username}` | Récupération des logs d'audit par utilisateur |
 | GET | `/audit/entity` | Récupération des logs d'audit par entité |
 | GET | `/audit/action/{actionType}` | Récupération des logs d'audit par type d'action |
+| GET | `/audit/date-range` | Récupération des logs d'audit par plage de dates |
+| GET | `/audit/search/user` | Recherche paginée des logs d'audit par nom d'utilisateur |
+| GET | `/audit/search/entity` | Recherche paginée des logs d'audit par entité et ID |
+| GET | `/audit/search/action-date` | Recherche paginée des logs d'audit par action et plage de dates |
 
 ### Endpoints Configuration Système
 
@@ -197,6 +209,7 @@ Base URL: `http://localhost:8087/api`
 | GET | `/configurations` | Récupération de toutes les configurations |
 | GET | `/configurations/{cle}` | Récupération d'une configuration par sa clé |
 | GET | `/configurations/type/{type}` | Récupération des configurations par type |
+| GET | `/configurations/search` | Recherche de configurations par description |
 | POST | `/configurations` | Création d'une nouvelle configuration |
 | PUT | `/configurations/{cle}` | Mise à jour d'une configuration |
 | DELETE | `/configurations/{cle}` | Suppression d'une configuration |
@@ -207,6 +220,9 @@ Base URL: `http://localhost:8087/api`
 | --- | --- | --- |
 | POST | `/sauvegardes/creer` | Création d'une sauvegarde complète des données |
 | POST | `/sauvegardes/restaurer` | Restauration d'une sauvegarde (nécessite un fichier) |
+| GET | `/sauvegardes` | Récupération de la liste des sauvegardes disponibles |
+| GET | `/sauvegardes/{id}` | Téléchargement d'une sauvegarde spécifique |
+| DELETE | `/sauvegardes/{id}` | Suppression d'une sauvegarde |
 
 
 ## Service Support

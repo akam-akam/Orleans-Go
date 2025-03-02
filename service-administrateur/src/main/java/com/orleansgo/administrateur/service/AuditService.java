@@ -85,3 +85,97 @@ public class AuditService {
         return "unknown";
     }
 }
+package com.orleansgo.administrateur.service;
+
+import com.orleansgo.administrateur.dto.AuditLogDTO;
+import com.orleansgo.administrateur.model.AuditLog;
+import com.orleansgo.administrateur.repository.AuditLogRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class AuditService {
+
+    @Autowired
+    private AuditLogRepository auditLogRepository;
+
+    public AuditLogDTO createAuditLog(AuditLogDTO auditLogDTO) {
+        AuditLog auditLog = convertToEntity(auditLogDTO);
+        auditLog = auditLogRepository.save(auditLog);
+        return convertToDTO(auditLog);
+    }
+
+    public List<AuditLogDTO> findByUsername(String username) {
+        return auditLogRepository.findByUsername(username).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<AuditLogDTO> findByAction(String action) {
+        return auditLogRepository.findByAction(action).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<AuditLogDTO> findByEntity(String entite) {
+        return auditLogRepository.findByEntite(entite).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<AuditLogDTO> findByDateRange(LocalDateTime debut, LocalDateTime fin) {
+        return auditLogRepository.findByDateCreationBetween(debut, fin).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public Page<AuditLogDTO> searchByUsername(String username, Pageable pageable) {
+        return auditLogRepository.findByUsernameContainingIgnoreCaseOrderByDateCreationDesc(username, pageable)
+                .map(this::convertToDTO);
+    }
+
+    public Page<AuditLogDTO> findByEntityAndId(String entite, String entiteId, Pageable pageable) {
+        return auditLogRepository.findByEntiteAndEntiteId(entite, entiteId, pageable)
+                .map(this::convertToDTO);
+    }
+
+    public Page<AuditLogDTO> findByActionAndDateRange(String action, LocalDateTime debut, LocalDateTime fin, Pageable pageable) {
+        return auditLogRepository.findByActionAndDateCreationBetween(action, debut, fin, pageable)
+                .map(this::convertToDTO);
+    }
+
+    // Méthodes utilitaires
+    
+    private AuditLogDTO convertToDTO(AuditLog auditLog) {
+        AuditLogDTO dto = new AuditLogDTO();
+        dto.setId(auditLog.getId());
+        dto.setUsername(auditLog.getUsername());
+        dto.setAction(auditLog.getAction());
+        dto.setEntite(auditLog.getEntite());
+        dto.setEntiteId(auditLog.getEntiteId());
+        dto.setDetails(auditLog.getDetails());
+        dto.setDateCreation(auditLog.getDateCreation());
+        dto.setIpAdresse(auditLog.getIpAdresse());
+        dto.setUserAgent(auditLog.getUserAgent());
+        return dto;
+    }
+
+    private AuditLog convertToEntity(AuditLogDTO dto) {
+        AuditLog auditLog = new AuditLog();
+        auditLog.setId(dto.getId());
+        auditLog.setUsername(dto.getUsername());
+        auditLog.setAction(dto.getAction());
+        auditLog.setEntite(dto.getEntite());
+        auditLog.setEntiteId(dto.getEntiteId());
+        auditLog.setDetails(dto.getDetails());
+        auditLog.setDateCreation(dto.getDateCreation());
+        auditLog.setIpAdresse(dto.getIpAdresse());
+        auditLog.setUserAgent(dto.getUserAgent());
+        return auditLog;
+    }
+}

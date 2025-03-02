@@ -161,3 +161,147 @@ public class ConfigurationSystemeServiceTest {
         verify(auditService, times(1)).logAction(eq("CONFIGURATION_SUPPRIMEE"), eq("CONFIGURATION"), eq(cle), eq("admin"), anyString());
     }
 }
+package com.orleansgo.administrateur.service;
+
+import com.orleansgo.administrateur.dto.ConfigurationSystemeDTO;
+import com.orleansgo.administrateur.model.ConfigurationSysteme;
+import com.orleansgo.administrateur.repository.ConfigurationSystemeRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+class ConfigurationSystemeServiceTest {
+
+    @Mock
+    private ConfigurationSystemeRepository configurationRepository;
+
+    @InjectMocks
+    private ConfigurationSystemeService configurationService;
+
+    private ConfigurationSysteme configuration;
+    private ConfigurationSystemeDTO configurationDTO;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        LocalDateTime now = LocalDateTime.now();
+        
+        configuration = new ConfigurationSysteme();
+        configuration.setCle("TARIF_BASE_COURSE");
+        configuration.setValeur("5.0");
+        configuration.setDescription("Tarif de base pour une course");
+        configuration.setType("COURSE");
+        configuration.setDateCreation(now);
+        configuration.setDateModification(now);
+        configuration.setModifiePar("admin");
+
+        configurationDTO = new ConfigurationSystemeDTO();
+        configurationDTO.setCle("TARIF_BASE_COURSE");
+        configurationDTO.setValeur("5.0");
+        configurationDTO.setDescription("Tarif de base pour une course");
+        configurationDTO.setType("COURSE");
+        configurationDTO.setDateCreation(now);
+        configurationDTO.setDateModification(now);
+        configurationDTO.setModifiePar("admin");
+    }
+
+    @Test
+    void testGetAllConfigurations() {
+        List<ConfigurationSysteme> configurations = new ArrayList<>();
+        configurations.add(configuration);
+        
+        when(configurationRepository.findAll()).thenReturn(configurations);
+        
+        List<ConfigurationSystemeDTO> result = configurationService.getAllConfigurations();
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(configurationDTO.getCle(), result.get(0).getCle());
+        assertEquals(configurationDTO.getValeur(), result.get(0).getValeur());
+        
+        verify(configurationRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testGetConfigurationByCle() {
+        when(configurationRepository.findById("TARIF_BASE_COURSE")).thenReturn(Optional.of(configuration));
+        
+        ConfigurationSystemeDTO result = configurationService.getConfigurationByCle("TARIF_BASE_COURSE");
+        
+        assertNotNull(result);
+        assertEquals(configurationDTO.getCle(), result.getCle());
+        assertEquals(configurationDTO.getValeur(), result.getValeur());
+        
+        verify(configurationRepository, times(1)).findById("TARIF_BASE_COURSE");
+    }
+
+    @Test
+    void testGetConfigurationsByType() {
+        List<ConfigurationSysteme> configurations = new ArrayList<>();
+        configurations.add(configuration);
+        
+        when(configurationRepository.findByType("COURSE")).thenReturn(configurations);
+        
+        List<ConfigurationSystemeDTO> result = configurationService.getConfigurationsByType("COURSE");
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(configurationDTO.getCle(), result.get(0).getCle());
+        assertEquals(configurationDTO.getType(), result.get(0).getType());
+        
+        verify(configurationRepository, times(1)).findByType("COURSE");
+    }
+
+    @Test
+    void testCreateConfiguration() {
+        when(configurationRepository.existsById("TARIF_BASE_COURSE")).thenReturn(false);
+        when(configurationRepository.save(any(ConfigurationSysteme.class))).thenReturn(configuration);
+        
+        ConfigurationSystemeDTO result = configurationService.createConfiguration(configurationDTO);
+        
+        assertNotNull(result);
+        assertEquals(configurationDTO.getCle(), result.getCle());
+        assertEquals(configurationDTO.getValeur(), result.getValeur());
+        
+        verify(configurationRepository, times(1)).existsById("TARIF_BASE_COURSE");
+        verify(configurationRepository, times(1)).save(any(ConfigurationSysteme.class));
+    }
+
+    @Test
+    void testUpdateConfiguration() {
+        when(configurationRepository.existsById("TARIF_BASE_COURSE")).thenReturn(true);
+        when(configurationRepository.save(any(ConfigurationSysteme.class))).thenReturn(configuration);
+        
+        ConfigurationSystemeDTO result = configurationService.updateConfiguration("TARIF_BASE_COURSE", configurationDTO);
+        
+        assertNotNull(result);
+        assertEquals(configurationDTO.getCle(), result.getCle());
+        assertEquals(configurationDTO.getValeur(), result.getValeur());
+        
+        verify(configurationRepository, times(1)).existsById("TARIF_BASE_COURSE");
+        verify(configurationRepository, times(1)).save(any(ConfigurationSysteme.class));
+    }
+
+    @Test
+    void testDeleteConfiguration() {
+        when(configurationRepository.existsById("TARIF_BASE_COURSE")).thenReturn(true);
+        doNothing().when(configurationRepository).deleteById("TARIF_BASE_COURSE");
+        
+        configurationService.deleteConfiguration("TARIF_BASE_COURSE");
+        
+        verify(configurationRepository, times(1)).existsById("TARIF_BASE_COURSE");
+        verify(configurationRepository, times(1)).deleteById("TARIF_BASE_COURSE");
+    }
+}

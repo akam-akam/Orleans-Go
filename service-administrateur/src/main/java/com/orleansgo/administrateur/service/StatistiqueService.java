@@ -92,3 +92,98 @@ public class StatistiqueService {
         rapportService.creerRapportStatistique("Rapport mensuel", donnees);
     }
 }
+package com.orleansgo.administrateur.service;
+
+import com.orleansgo.administrateur.dto.StatistiqueDTO;
+import com.orleansgo.administrateur.model.Statistique;
+import com.orleansgo.administrateur.repository.StatistiqueRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class StatistiqueService {
+
+    @Autowired
+    private StatistiqueRepository statistiqueRepository;
+
+    public List<StatistiqueDTO> getAllStatistiques() {
+        return statistiqueRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public StatistiqueDTO getStatistiqueById(Long id) {
+        Statistique statistique = statistiqueRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Statistique non trouvée avec l'ID: " + id));
+        return convertToDTO(statistique);
+    }
+
+    public List<StatistiqueDTO> getStatistiquesByType(String type) {
+        return statistiqueRepository.findByType(type).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<StatistiqueDTO> getStatistiquesByPeriode(LocalDateTime debut, LocalDateTime fin) {
+        return statistiqueRepository.findByPeriodeBetween(debut, fin).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public StatistiqueDTO createStatistique(StatistiqueDTO statistiqueDTO) {
+        Statistique statistique = convertToEntity(statistiqueDTO);
+        statistique = statistiqueRepository.save(statistique);
+        return convertToDTO(statistique);
+    }
+
+    public StatistiqueDTO updateStatistique(Long id, StatistiqueDTO statistiqueDTO) {
+        if (!statistiqueRepository.existsById(id)) {
+            throw new RuntimeException("Statistique non trouvée avec l'ID: " + id);
+        }
+        Statistique statistique = convertToEntity(statistiqueDTO);
+        statistique.setId(id);
+        statistique = statistiqueRepository.save(statistique);
+        return convertToDTO(statistique);
+    }
+
+    public void deleteStatistique(Long id) {
+        if (!statistiqueRepository.existsById(id)) {
+            throw new RuntimeException("Statistique non trouvée avec l'ID: " + id);
+        }
+        statistiqueRepository.deleteById(id);
+    }
+
+    public Double getSumByTypeAndPeriode(String type, LocalDateTime debut, LocalDateTime fin) {
+        return statistiqueRepository.calculateSumByTypeAndPeriode(type, debut, fin);
+    }
+
+    // Méthodes utilitaires
+    
+    private StatistiqueDTO convertToDTO(Statistique statistique) {
+        StatistiqueDTO dto = new StatistiqueDTO();
+        dto.setId(statistique.getId());
+        dto.setType(statistique.getType());
+        dto.setLabel(statistique.getLabel());
+        dto.setValeur(statistique.getValeur());
+        dto.setDateCreation(statistique.getDateCreation());
+        dto.setPeriode(statistique.getPeriode());
+        dto.setMetadonnees(statistique.getMetadonnees());
+        return dto;
+    }
+
+    private Statistique convertToEntity(StatistiqueDTO dto) {
+        Statistique statistique = new Statistique();
+        statistique.setId(dto.getId());
+        statistique.setType(dto.getType());
+        statistique.setLabel(dto.getLabel());
+        statistique.setValeur(dto.getValeur());
+        statistique.setDateCreation(dto.getDateCreation());
+        statistique.setPeriode(dto.getPeriode());
+        statistique.setMetadonnees(dto.getMetadonnees());
+        return statistique;
+    }
+}
