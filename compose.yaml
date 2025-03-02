@@ -180,7 +180,7 @@ services:
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     networks:
       - orleansgo-network
-      
+
   service-securite:
     build: ./service-securite
     ports:
@@ -197,7 +197,7 @@ services:
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     networks:
       - orleansgo-network
-      
+
   service-vehicule:
     build: ./service-vehicule
     ports:
@@ -214,7 +214,7 @@ services:
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     networks:
       - orleansgo-network
-      
+
   service-evenement:
     build: ./service-evenement
     ports:
@@ -231,7 +231,7 @@ services:
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     networks:
       - orleansgo-network
-      
+
   service-commission:
     build: ./service-commission
     ports:
@@ -247,7 +247,7 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     networks:
-      - orleansgo-networkrk
+      - orleansgo-network
 
 networks:
   orleansgo-network:
