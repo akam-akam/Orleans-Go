@@ -1,0 +1,1007 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam shadowing false
+
+package "Service Administrateur" {
+
+    ' 📌 Classe Administrateur
+    class Administrateur {
+        - String id
+        - String email
+        - String motDePasse
+        - boolean actif
+        + void gererUtilisateurs(Utilisateur utilisateur, ActionUtilisateur action)
+        + void surveillerCourses(Course course)
+        + void ajusterCommission(BigDecimal taux)
+        + void configurerParrainage(BigDecimal bonusParrain, BigDecimal bonusFilleul)
+        + void genererRapports(TypeRapport type)
+        + void validerDocuments(Chauffeur chauffeur)
+    }
+
+    ' 📌 Classe VerificationDocuments
+    class VerificationDocuments {
+        - String id
+        - Chauffeur chauffeur
+        - boolean permisValide
+        - boolean carteGriseValide
+        - boolean assuranceValide
+        - LocalDateTime dateVerification
+        + boolean estComplet()
+    }
+
+    ' 📌 Classe GestionLitiges
+    class GestionLitiges {
+        - String id
+        - Utilisateur plaignant
+        - Utilisateur misEnCause
+        - String description
+        - StatutLitige statut
+        - LocalDateTime dateOuverture
+        - LocalDateTime dateResolution
+        + void traiterLitige()
+        + void cloreLitige()
+    }
+
+    ' 📌 Classe Commission
+    class Commission {
+        - String id
+        - BigDecimal tauxCommission
+        - String typeVehicule
+        - String region
+        - LocalDateTime dateDebut
+        - LocalDateTime dateFin
+        + BigDecimal calculer(BigDecimal montant)
+        + void ajusterTaux(BigDecimal nouveauTaux)
+    }
+
+    ' 📌 Classe RapportAdmin
+    class RapportAdmin {
+        - String id
+        - Administrateur generePar
+        - TypeRapport type
+        - LocalDateTime dateGeneration
+        - byte[] contenu
+        + void generer()
+        + void telecharger()
+    }
+
+    ' 📌 Enum TypeRapport
+    enum TypeRapport {
+        UTILISATION
+        FINANCES
+        PERFORMANCE_CHAUFFEUR
+        PAIEMENTS
+    }
+
+    ' 📌 Enum StatutLitige
+    enum StatutLitige {
+        EN_ATTENTE
+        EN_COURS
+        RESOLU
+        REJETE
+    }
+
+    ' 📌 Enum ActionUtilisateur
+    enum ActionUtilisateur {
+        ACTIVER
+        DESACTIVER
+        SUPPRIMER
+    }
+
+    ' 📌 Relations
+    Administrateur "1" -- "*" Utilisateur : gereUtilisateurs >
+    Administrateur "1" -- "*" VerificationDocuments : valideDocuments >
+    Administrateur "1" -- "*" GestionLitiges : gereLitiges >
+    Administrateur "1" -- "*" Commission : ajusteCommission >
+    Administrateur "1" -- "*" RapportAdmin : genereRapports >
+}
+
+package "Service Utilisateur" {
+
+    ' 📌 Classe Utilisateur
+    class Utilisateur {
+        - String id
+        - String email
+        - String motDePasse
+        - String prenom
+        - String nom
+        - String numeroTelephone
+        - EnumSet<RoleUtilisateur> roles
+        - boolean actif
+        - boolean emailVerifie
+        - boolean telephoneVerifie
+        - boolean support2FA
+        - String codeParrainage
+        - BigDecimal soldeBonus
+        - BigDecimal soldeRetirable
+        - LocalDateTime dateCreation
+        + boolean estActif()
+        + void activer(boolean)
+        + void ajouterBonus(BigDecimal montant)
+        + void retirerSolde(IPaiementStrategy modePaiement)
+    }
+
+    ' 📌 Classe RoleUtilisateur
+    class RoleUtilisateur {
+        + static final String ADMIN = "ADMIN"
+        + static final String CHAUFFEUR = "CHAUFFEUR"
+        + static final String PASSAGER = "PASSAGER"
+    }
+
+    ' 📌 Classe Parrainage
+    class Parrainage {
+        - String id
+        - Utilisateur parrain
+        - Utilisateur filleul
+        - BigDecimal bonusParrain
+        - BigDecimal bonusFilleul
+        - boolean valide
+        - LocalDateTime dateCreation
+        + void validerParrainage()
+    }
+
+    ' 📌 Classe HistoriqueTransaction
+    class HistoriqueTransaction {
+        - String id
+        - Utilisateur utilisateur
+        - TransactionType type
+        - BigDecimal montant
+        - LocalDateTime dateTransaction
+        + void enregistrerTransaction()
+    }
+
+    ' 📌 Enumération TransactionType
+    enum TransactionType {
+        BONUS_UTILISE
+        PAIEMENT_RECU
+        RETRAIT_EFFECTUE
+        REMBOURSEMENT
+        CASHBACK
+        PAIEMENT_COURSE
+    }
+
+    ' 📌 Relations
+    Utilisateur "1" -- "*" RoleUtilisateur : aRole >
+    Utilisateur "1" -- "*" Parrainage : aParrainages >
+    Utilisateur "1" -- "*" HistoriqueTransaction : aTransactions >
+}
+
+package "Service Chauffeur" {
+
+    ' 📌 Classe Chauffeur
+    class Chauffeur {
+        - String id
+        - Utilisateur utilisateur
+        - boolean disponible
+        - double note
+        - int totalCourses
+        - BigDecimal gains
+        - Vehicule vehicule
+        - boolean documentsValides
+        + void mettreAJourDisponibilite(boolean)
+        + void ajouterGains(BigDecimal montant)
+        + boolean verifierDocuments()
+    }
+
+    ' 📌 Classe DocumentVerification
+    class DocumentVerification {
+        - String id
+        - Chauffeur chauffeur
+        - boolean permisValide
+        - boolean carteGriseValide
+        - boolean assuranceValide
+        - boolean valideParAdmin
+        - LocalDateTime dateVerification
+        + boolean estComplet()
+        + void validerDocument(String typeDocument)
+    }
+
+    ' 📌 Classe Vehicule
+    class Vehicule {
+        - String id
+        - Chauffeur chauffeur
+        - String immatriculation
+        - String marque
+        - String modele
+        - String couleur
+        - int annee
+        - boolean disponible
+        - TypeVehicule typeVehicule
+        - TypeCarburant typeCarburant
+        - VehiculeEtat etat
+        + void mettreAJourDisponibilite(boolean)
+        + void effectuerEntretien()
+    }
+
+    ' 📌 Classe TypeVehicule
+    class TypeVehicule {
+        - String id
+        - String nom
+        - int capacitePassagers
+        - boolean luxe
+    }
+
+    ' 📌 Classe TypeCarburant
+    class TypeCarburant {
+        - String id
+        - String nom
+    }
+
+    ' 📌 Enum VehiculeEtat
+    enum VehiculeEtat {
+        EN_SERVICE
+        EN_MAINTENANCE
+        HORS_SERVICE
+    }
+
+    ' 📌 Relations
+    Chauffeur "1" -- "1" Utilisateur : estUnUtilisateur >
+    Chauffeur "1" -- "1" DocumentVerification : verifieDocuments >
+    Chauffeur "1" -- "1" Vehicule : conduit >
+    Vehicule "1" -- "1" TypeVehicule : estDeType >
+    Vehicule "1" -- "1" TypeCarburant : utiliseCarburant >
+}
+
+package "Service Véhicule" {
+
+    ' 📌 Classe Vehicule
+    class Vehicule {
+        - String id
+        - String immatriculation
+        - String marque
+        - String modele
+        - String couleur
+        - int annee
+        - boolean disponible
+        - TypeVehicule typeVehicule
+        - TypeCarburant typeCarburant
+        - VehiculeEtat etat
+        - LocalDateTime dateProchainEntretien
+        + void mettreAJourDisponibilite(boolean)
+        + void effectuerEntretien()
+        + boolean estDisponible()
+    }
+
+    ' 📌 Classe TypeVehicule
+    class TypeVehicule {
+        - String id
+        - String nom
+        - int capacitePassagers
+        - boolean luxe
+        - boolean utilitaire
+    }
+
+    ' 📌 Classe TypeCarburant
+    class TypeCarburant {
+        - String id
+        - String nom
+    }
+
+    ' 📌 Classe HistoriqueEntretien
+    class HistoriqueEntretien {
+        - String id
+        - Vehicule vehicule
+        - String description
+        - LocalDateTime dateEntretien
+        - BigDecimal cout
+        + void enregistrerEntretien()
+    }
+
+    ' 📌 Enum VehiculeEtat
+    enum VehiculeEtat {
+        EN_SERVICE
+        EN_MAINTENANCE
+        HORS_SERVICE
+    }
+
+    ' 📌 Relations
+    Vehicule "1" -- "1" TypeVehicule : estDeType >
+    Vehicule "1" -- "1" TypeCarburant : utiliseCarburant >
+    Vehicule "1" -- "*" HistoriqueEntretien : aHistorique >
+}
+
+package "Service Course" {
+
+    ' 📌 Interface pour appliquer le Pattern Strategy
+    interface ICourseStrategy {
+        + void demarrer()
+        + void terminer()
+        + void annuler(String motif)
+        + BigDecimal calculerTarif(Trajet trajet)
+    }
+
+    ' 📌 Classe Course
+    class Course {
+        - String id
+        - Utilisateur passager
+        - Chauffeur chauffeur
+        - Vehicule vehicule
+        - LocalDateTime demandeeA
+        - LocalDateTime termineeA
+        - BigDecimal tarifEstime
+        - BigDecimal tarifFinal
+        - BigDecimal commissionAppliquee
+        - StatutCourse statut
+        - boolean utiliseBonus
+        - boolean penaliteAnnulation
+        - ICourseStrategy typeCourse
+        + void finaliserCourse()
+        + void appliquerCommission()
+    }
+
+    ' 📌 Classe Trajet
+    class Trajet {
+        - String id
+        - Point depart
+        - Point arrivee
+        - double distanceKm
+        - int dureeMinutes
+        - BigDecimal tarifBase
+        + BigDecimal calculerTarif()
+    }
+
+    ' 📌 Classes de Courses (implémentation du Pattern Strategy)
+    class CourseSimple {
+        + void demarrer()
+        + void terminer()
+        + void annuler(String motif)
+        + BigDecimal calculerTarif(Trajet trajet)
+    }
+
+    class CoursePartagee {
+        - List<Utilisateur> passagers
+        - List<Trajet> trajets
+        + void ajouterPassager(Utilisateur passager)
+        + void demarrer()
+        + void terminer()
+        + void annuler(String motif)
+        + BigDecimal calculerTarif(Trajet trajet)
+    }
+
+    class CoursePlanifiee {
+        - LocalDateTime heureDepart
+        + void planifier()
+        + void demarrer()
+        + void terminer()
+        + void annuler(String motif)
+        + BigDecimal calculerTarif(Trajet trajet)
+    }
+
+    ' 📌 Statut d'une course
+    enum StatutCourse {
+        DEMANDEE
+        ACCEPTEE
+        EN_COURS
+        TERMINEE
+        ANNULEE_PAR_PASSAGER
+        ANNULEE_PAR_CHAUFFEUR
+    }
+
+    ' 📌 Relations entre les classes
+    Course "1" -- "1" Trajet : contient >
+    Course "1" -- "1" Commission : appliqueCommission >
+    Course "1" -- "1" ICourseStrategy : utiliseStrategie >
+    ICourseStrategy <|.. CourseSimple
+    ICourseStrategy <|.. CoursePartagee
+    ICourseStrategy <|.. CoursePlanifiee
+    CoursePartagee "1" -- "*" Trajet : aPlusieursTrajets >
+}
+
+package "Service Paiement" {
+
+    ' 📌 Interface pour appliquer le Pattern Strategy
+    interface IPaiementStrategy {
+        + boolean traiterPaiement(BigDecimal montant)
+    }
+
+    ' 📌 Classe Paiement
+    class Paiement {
+        - String id
+        - Utilisateur payeur
+        - Course course
+        - BigDecimal montant
+        - IPaiementStrategy modePaiement
+        - StatutPaiement statut
+        - LocalDateTime datePaiement
+        + boolean effectuerPaiement()
+    }
+
+    ' 📌 Classes de paiement (implémentation du Pattern Strategy)
+    class PaiementCB {
+        + boolean traiterPaiement(BigDecimal montant)
+    }
+
+    class PaiementPayPal {
+        + boolean traiterPaiement(BigDecimal montant)
+    }
+
+    class PaiementVirement {
+        + boolean traiterPaiement(BigDecimal montant)
+    }
+
+    class PaiementCrypto {
+        + boolean traiterPaiement(BigDecimal montant)
+    }
+
+    ' 📌 Classe Commission
+    class Commission {
+        - String id
+        - BigDecimal tauxCommission
+        - BigDecimal montantApplique
+        - LocalDateTime dateApplication
+        + BigDecimal calculer(BigDecimal montant)
+    }
+
+    ' 📌 Classe Facture
+    class Facture {
+        - String id
+        - Utilisateur utilisateur
+        - Paiement paiement
+        - BigDecimal montantTotal
+        - LocalDateTime dateEmission
+        + void genererPDF()
+    }
+
+    ' 📌 Classe Retrait
+    class Retrait {
+        - String id
+        - Utilisateur utilisateur
+        - BigDecimal montant
+        - IPaiementStrategy modePaiement
+        - StatutRetrait statut
+        - LocalDateTime dateDemande
+        - LocalDateTime dateValidation
+        + void effectuerRetrait()
+    }
+
+    ' 📌 Classe Cashback
+    class Cashback {
+        - String id
+        - Utilisateur utilisateur
+        - BigDecimal montant
+        - LocalDateTime dateObtention
+        + void appliquer()
+    }
+
+    ' 📌 Enum StatutPaiement
+    enum StatutPaiement {
+        EN_ATTENTE
+        EFFECTUE
+        ECHOUE
+        REMBOURSE
+    }
+
+    ' 📌 Enum StatutRetrait
+    enum StatutRetrait {
+        EN_ATTENTE
+        APPROUVE
+        REFUSE
+    }
+
+    ' 📌 Relations
+    Paiement "1" -- "1" Commission : appliqueCommission >
+    Paiement "1" -- "1" IPaiementStrategy : utiliseStrategie >
+    Paiement "1" -- "1" Facture : genereFacture >
+    Paiement "1" -- "1" Cashback : appliqueCashback >
+    Retrait "1" -- "1" IPaiementStrategy : utiliseStrategie >
+    IPaiementStrategy <|.. PaiementCB
+    IPaiementStrategy <|.. PaiementPayPal
+    IPaiementStrategy <|.. PaiementVirement
+    IPaiementStrategy <|.. PaiementCrypto
+}
+
+package "Service Commission" {
+
+    ' 📌 Interface pour appliquer le Pattern Strategy
+    interface ICommissionStrategy {
+        + BigDecimal calculerCommission(BigDecimal montantCourse)
+    }
+
+    ' 📌 Classe Commission
+    class Commission {
+        - String id
+        - BigDecimal tauxCommission
+        - BigDecimal montantApplique
+        - LocalDateTime dateApplication
+        - ICommissionStrategy strategie
+        + BigDecimal appliquerCommission(BigDecimal montantCourse)
+    }
+
+    ' 📌 Classe RegleCommission
+    class RegleCommission {
+        - String id
+        - String typeVehicule
+        - String region
+        - BigDecimal taux
+        - boolean actif
+        + BigDecimal appliquer(BigDecimal montantCourse)
+    }
+
+    ' 📌 Classes de commission (implémentation du Pattern Strategy)
+    class CommissionStandard {
+        + BigDecimal calculerCommission(BigDecimal montantCourse)
+    }
+
+    class CommissionPremium {
+        + BigDecimal calculerCommission(BigDecimal montantCourse)
+    }
+
+    class CommissionPartagee {
+        + BigDecimal calculerCommission(BigDecimal montantCourse)
+    }
+
+    ' 📌 Classe HistoriqueCommission
+    class HistoriqueCommission {
+        - String id
+        - Commission commission
+        - Utilisateur chauffeur
+        - BigDecimal montantPreleve
+        - LocalDateTime datePrelevement
+        + void enregistrerCommission()
+    }
+
+    ' 📌 Relations
+    Commission "1" -- "1" ICommissionStrategy : utiliseStrategie >
+    Commission "1" -- "*" RegleCommission : appliqueRegle >
+    Commission "1" -- "*" HistoriqueCommission : stockeHistorique >
+    ICommissionStrategy <|.. CommissionStandard
+    ICommissionStrategy <|.. CommissionPremium
+    ICommissionStrategy <|.. CommissionPartagee
+}
+
+package "Service Parrainage" {
+
+    ' 📌 Classe Parrainage
+    class Parrainage {
+        - String id
+        - Utilisateur parrain
+        - Utilisateur filleul
+        - String codeParrainage
+        - BigDecimal bonusParrain
+        - BigDecimal bonusFilleul
+        - boolean valide
+        - LocalDateTime dateCreation
+        - LocalDateTime dateValidation
+        + void validerParrainage()
+        + void appliquerBonus()
+    }
+
+    ' 📌 Classe RegleParrainage
+    class RegleParrainage {
+        - String id
+        - BigDecimal montantBonusParrain
+        - BigDecimal montantBonusFilleul
+        - boolean actif
+        - LocalDateTime dateMiseEnPlace
+        + BigDecimal appliquerBonusParrain()
+        + BigDecimal appliquerBonusFilleul()
+    }
+
+    ' 📌 Classe HistoriqueParrainage
+    class HistoriqueParrainage {
+        - String id
+        - Parrainage parrainage
+        - Utilisateur utilisateur
+        - BigDecimal montantRecompense
+        - LocalDateTime dateTransaction
+        + void enregistrerTransaction()
+    }
+
+    ' 📌 Classe RetraitParrainage
+    class RetraitParrainage {
+        - String id
+        - Utilisateur utilisateur
+        - BigDecimal montant
+        - ModePaiement modePaiement
+        - StatutRetrait statut
+        - LocalDateTime dateDemande
+        - LocalDateTime dateValidation
+        + void effectuerRetrait()
+    }
+
+    ' 📌 Enum ModePaiement
+    enum ModePaiement {
+        VIREMENT
+        CB
+        PAYPAL
+    }
+
+    ' 📌 Enum StatutRetrait
+    enum StatutRetrait {
+        EN_ATTENTE
+        APPROUVE
+        REFUSE
+    }
+
+    ' 📌 Relations
+    Utilisateur "1" -- "*" Parrainage : parraine >
+    Utilisateur "1" -- "*" HistoriqueParrainage : aHistorique >
+    Parrainage "1" -- "1" RegleParrainage : suitRegle >
+    Parrainage "1" -- "*" HistoriqueParrainage : genereHistorique >
+    Utilisateur "1" -- "*" RetraitParrainage : demandeRetrait >
+}
+
+package "Service Sécurité" {
+
+    ' 📌 Classe SecurityMiddleware
+    class SecurityMiddleware {
+        - boolean JWTVerification
+        - boolean OAuthVerification
+        - boolean RateLimiting
+        - boolean support2FA
+        + boolean verifierAuthentification(Utilisateur utilisateur)
+        + boolean verifierPermissions(Utilisateur utilisateur, String ressource)
+    }
+
+    ' 📌 Classe JWTToken
+    class JWTToken {
+        - String utilisateurId
+        - String token
+        - LocalDateTime expiration
+        + boolean estValide()
+        + String extraireRole()
+    }
+
+    ' 📌 Classe OAuthToken
+    class OAuthToken {
+        - String utilisateurId
+        - String provider
+        - String token
+        - LocalDateTime expiration
+        + boolean estValide()
+    }
+
+    ' 📌 Classe Verification2FA
+    class Verification2FA {
+        - String utilisateurId
+        - String code2FA
+        - LocalDateTime expiration
+        + boolean verifierCode(String code)
+        + void genererCode()
+    }
+
+    ' 📌 Classe LogActivite
+    class LogActivite {
+        - String id
+        - Utilisateur utilisateur
+        - String typeAction
+        - LocalDateTime dateAction
+        + void enregistrerLog()
+    }
+
+    ' 📌 Enum TypeAction
+    enum TypeAction {
+        CONNEXION
+        DECONNEXION
+        CHANGEMENT_MDP
+        ECHEC_CONNEXION
+        ACCES_REFUSE
+    }
+
+    ' 📌 Relations
+    SecurityMiddleware "1" -- "*" JWTToken : gereJWT >
+    SecurityMiddleware "1" -- "*" OAuthToken : gereOAuth >
+    SecurityMiddleware "1" -- "*" Verification2FA : gere2FA >
+    SecurityMiddleware "1" -- "*" LogActivite : archive >
+}
+
+package "API Gateway" {
+
+    ' 📌 Classe APIGateway
+    class APIGateway {
+        + boolean verifierToken(JWTToken token)
+        + boolean effectuerRetrait(Utilisateur utilisateur, BigDecimal montant, ModePaiement mode)
+        + boolean effectuerPaiement(Utilisateur utilisateur, Course course, ModePaiement mode)
+        + void routerRequete(String service, String endpoint, MethodeHTTP methode)
+    }
+
+    ' 📌 Classe AuthentificationService
+    class AuthentificationService {
+        + boolean verifierAuthentification(Utilisateur utilisateur)
+        + boolean verifierPermissions(Utilisateur utilisateur, String ressource)
+    }
+
+    ' 📌 Classe RateLimiter
+    class RateLimiter {
+        - Map<Utilisateur, Integer> requetesParMinute
+        + boolean verifierLimite(Utilisateur utilisateur)
+        + void enregistrerRequete(Utilisateur utilisateur)
+    }
+
+    ' 📌 Classe JournalisationAPI
+    class JournalisationAPI {
+        - String id
+        - Utilisateur utilisateur
+        - String endpoint
+        - MethodeHTTP methode
+        - LocalDateTime dateRequete
+        + void enregistrerLog()
+    }
+
+    ' 📌 Enum MethodeHTTP
+    enum MethodeHTTP {
+        GET
+        POST
+        PUT
+        DELETE
+    }
+
+    ' 📌 Relations
+    APIGateway "1" -- "1" AuthentificationService : gereAuthentification >
+    APIGateway "1" -- "1" RateLimiter : appliqueRateLimiting >
+    APIGateway "1" -- "*" JournalisationAPI : enregistreLogs >
+}
+
+package "Service Notification" {
+
+    ' 📌 Interface pour le Pattern Strategy
+    interface INotificationStrategy {
+        + boolean envoyerNotification(Utilisateur destinataire, String message)
+    }
+
+    ' 📌 Classe Notification
+    class Notification {
+        - String id
+        - Utilisateur destinataire
+        - String message
+        - TypeNotification type
+        - StatutNotification statut
+        - LocalDateTime dateEnvoi
+        - INotificationStrategy canal
+        + void envoyer()
+    }
+
+    ' 📌 Classes de notification (implémentation du Pattern Strategy)
+    class NotificationEmail {
+        + boolean envoyerNotification(Utilisateur destinataire, String message)
+    }
+
+    class NotificationSMS {
+        + boolean envoyerNotification(Utilisateur destinataire, String message)
+    }
+
+    class NotificationPush {
+        + boolean envoyerNotification(Utilisateur destinataire, String message)
+    }
+
+    ' 📌 Classe PreferenceNotification
+    class PreferenceNotification {
+        - String id
+        - Utilisateur utilisateur
+        - boolean recevoirEmail
+        - boolean recevoirSMS
+        - boolean recevoirPush
+        + void modifierPreferences(boolean email, boolean sms, boolean push)
+    }
+
+    ' 📌 Classe LogNotification
+    class LogNotification {
+        - String id
+        - Notification notification
+        - Utilisateur utilisateur
+        - StatutNotification statut
+        - LocalDateTime dateEnvoi
+        + void enregistrerLog()
+    }
+
+    ' 📌 Enum TypeNotification
+    enum TypeNotification {
+        COURSE_ACCEPTEE
+        COURSE_ANNULEE
+        PAIEMENT_EFFECTUE
+        NOUVEAU_MESSAGE
+    }
+
+    ' 📌 Enum StatutNotification
+    enum StatutNotification {
+        EN_ATTENTE
+        ENVOYEE
+        ECHEC
+    }
+
+    ' 📌 Relations
+    Notification "1" -- "1" INotificationStrategy : utiliseStrategie >
+    Notification "1" -- "*" LogNotification : genereLog >
+    Utilisateur "1" -- "1" PreferenceNotification : aPreference >
+    INotificationStrategy <|.. NotificationEmail
+    INotificationStrategy <|.. NotificationSMS
+    INotificationStrategy <|.. NotificationPush
+}
+
+package "Service Support Client" {
+
+    ' 📌 Classe TicketSupport
+    class TicketSupport {
+        - String id
+        - Utilisateur client
+        - Administrateur agentSupport
+        - TypeReclamation type
+        - StatutTicket statut
+        - String description
+        - List<MessageSupport> messages
+        - LocalDateTime dateCreation
+        - LocalDateTime dateResolution
+        + void ajouterMessage(MessageSupport message)
+        + void cloturerTicket()
+    }
+
+    ' 📌 Classe MessageSupport
+    class MessageSupport {
+        - String id
+        - TicketSupport ticket
+        - Utilisateur auteur
+        - String contenu
+        - LocalDateTime dateEnvoi
+        + void envoyerMessage()
+    }
+
+    ' 📌 Classe PieceJointeSupport
+    class PieceJointeSupport {
+        - String id
+        - TicketSupport ticket
+        - String nomFichier
+        - String typeFichier
+        - byte[] fichier
+        - LocalDateTime dateAjout
+        + void telecharger()
+    }
+
+    ' 📌 Enum TypeReclamation
+    enum TypeReclamation {
+        PROBLEME_PAIEMENT
+        COURSE_ANNULEE
+        OBJET_PERDU
+        CONDUITE_DANGEREUSE
+        AUTRE
+    }
+
+    ' 📌 Enum StatutTicket
+    enum StatutTicket {
+        OUVERT
+        EN_COURS
+        RESOLU
+        FERME
+    }
+
+    ' 📌 Relations
+    Utilisateur "1" -- "*" TicketSupport : soumet >
+    Administrateur "1" -- "*" TicketSupport : gere >
+    TicketSupport "1" -- "*" MessageSupport : contientMessages >
+    TicketSupport "1" -- "*" PieceJointeSupport : contientPiecesJointes >
+}
+
+package "Service Reporting & Analytics" {
+
+    ' 📌 Classe Rapport
+    class Rapport {
+        - String id
+        - Administrateur generePar
+        - TypeRapport type
+        - LocalDateTime dateGeneration
+        - String format
+        - byte[] contenu
+        + void generer()
+        + void telecharger()
+    }
+
+    ' 📌 Classe StatistiquesChauffeur
+    class StatistiquesChauffeur {
+        - String id
+        - Chauffeur chauffeur
+        - int nombreCourses
+        - BigDecimal revenusTotaux
+        - double moyenneNote
+        - int coursesAnnulees
+        - LocalDateTime periode
+        + void calculerStats()
+    }
+
+    ' 📌 Classe StatistiquesCourse
+    class StatistiquesCourse {
+        - String id
+        - int totalCourses
+        - int coursesPartagees
+        - int coursesAnnulees
+        - Zone laPlusActive
+        - LocalDateTime periode
+        + void genererRapport()
+    }
+
+    ' 📌 Classe StatistiquesFinance
+    class StatistiquesFinance {
+        - String id
+        - BigDecimal revenusTotaux
+        - BigDecimal commissionsPercues
+        - BigDecimal remboursementsEffectues
+        - BigDecimal paiementsEffectues
+        - LocalDateTime periode
+        + void genererRapport()
+    }
+
+    ' 📌 Enum TypeRapport
+    enum TypeRapport {
+        PERFORMANCE_CHAUFFEUR
+        STATISTIQUES_COURSE
+        FINANCES
+        ACTIVITE_UTILISATEURS
+    }
+
+    ' 📌 Relations
+    Administrateur "1" -- "*" Rapport : genere >
+    Rapport "1" -- "*" StatistiquesChauffeur : inclutStatsChauffeur >
+    Rapport "1" -- "*" StatistiquesCourse : inclutStatsCourse >
+    Rapport "1" -- "*" StatistiquesFinance : inclutStatsFinance >
+}
+
+package "Service Réservation & Programmation" {
+
+    ' 📌 Classe Reservation
+    class Reservation {
+        - String id
+        - Utilisateur client
+        - Chauffeur chauffeur
+        - TypeReservation type
+        - Point lieuDepart
+        - Point lieuArrivee
+        - LocalDateTime dateReservation
+        - LocalDateTime heureDepart
+        - StatutReservation statut
+        + void confirmer()
+        + void annuler()
+        + void modifier(DateTime nouvelleDate)
+    }
+
+    ' 📌 Classe RecurrenceReservation
+    class RecurrenceReservation {
+        - String id
+        - Reservation reservation
+        - FrequenceRecurrence frequence
+        - LocalDateTime dateDebut
+        - LocalDateTime dateFin
+        + void genererOccurrences()
+        + void stopperRecurrence()
+    }
+
+    ' 📌 Classe NotificationReservation
+    class NotificationReservation {
+        - String id
+        - Reservation reservation
+        - Utilisateur destinataire
+        - LocalDateTime dateEnvoi
+        - String message
+        + void envoyerNotification()
+    }
+
+    ' 📌 Enum TypeReservation
+    enum TypeReservation {
+        SIMPLE
+        PARTAGEE
+        RECCURENTE
+    }
+
+    ' 📌 Enum StatutReservation
+    enum StatutReservation {
+        EN_ATTENTE
+        CONFIRMEE
+        ANNULEE
+        TERMINEE
+    }
+
+    ' 📌 Enum FrequenceRecurrence
+    enum FrequenceRecurrence {
+        QUOTIDIENNE
+        HEBDOMADAIRE
+        MENSUELLE
+    }
+
+    ' 📌 Relations
+    Utilisateur "1" -- "*" Reservation : effectueReservation >
+    Chauffeur "1" -- "*" Reservation : assigneChauffeur >
+    Reservation "1" -- "1" RecurrenceReservation : peutEtreRecurrente >
+    Reservation "1" -- "*" NotificationReservation : genereNotification >
+}
+
+
+@enduml
+

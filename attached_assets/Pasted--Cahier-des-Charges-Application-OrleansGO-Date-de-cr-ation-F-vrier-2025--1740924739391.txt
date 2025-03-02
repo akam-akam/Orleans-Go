@@ -1,0 +1,234 @@
+# 📌 **Cahier des Charges – Application OrleansGO**  
+📅 **Date de création** : Février 2025  
+🛠 **Version** : 1.0  
+
+---
+
+## 🔹 **1. Introduction**
+### **1.1 Présentation du projet**  
+OrleansGO est une plateforme de mise en relation entre chauffeurs et passagers pour des services de transport. Elle propose également la location de véhicules pour les entreprises et particuliers. L'application est accessible via **web (React.js)** et **mobile (Android & iOS)**.
+
+### **1.2 Objectifs du projet**  
+- Développer une **application sécurisée et évolutive**.  
+- Fournir une **expérience fluide** aux utilisateurs (chauffeurs, passagers et administrateurs).  
+- Implémenter un **système de paiement intégré** (CB, PayPal, virement bancaire).  
+- Permettre la **gestion des commissions** et **parrainages**.  
+- Assurer un **suivi en temps réel** des trajets avec WebSocket.  
+
+---
+
+## 🔹 **2. Acteurs du Système**
+| **Rôle** | **Description** |
+|----------|----------------|
+| **Passager** | Réserve des courses, suit ses trajets en temps réel, paie via l’application. |
+| **Chauffeur** | Accepte les courses, met à jour sa localisation, gère ses paiements et son véhicule. |
+| **Administrateur** | Supervise l’application, valide les chauffeurs et configure les commissions. |
+| **Entreprise** | Gère la location de véhicules pour son personnel. |
+| **Système de paiement** | Gère les transactions et le paiement des chauffeurs après chaque course. |
+
+---
+
+## 🔹 **3. Fonctionnalités**
+### 🏆 **3.1 Fonctionnalités Passager**
+✅ Inscription et connexion (JWT, OAuth2).  
+✅ Réservation d’une **course simple** ou **course partagée**.  
+✅ Suivi du chauffeur en **temps réel** (WebSocket).  
+✅ Historique des trajets et paiements.  
+✅ Notation des chauffeurs.  
+✅ Parrainage (bonus après la première course d’un filleul).  
+
+### 🚖 **3.2 Fonctionnalités Chauffeur**
+✅ Validation des documents (permis, carte grise, assurance).  
+✅ Gestion des courses (acceptation, annulation, historique).  
+✅ Suivi des paiements et commissions.  
+✅ Mise à jour de sa position en **temps réel**.  
+✅ Gestion des véhicules (immatriculation, type, carburant).  
+
+### 🛠 **3.3 Fonctionnalités Administrateur**
+✅ Validation des comptes chauffeurs.  
+✅ Gestion des **commissions** et des **bonus de parrainage**.  
+✅ Supervision des paiements et transactions.  
+✅ Gestion des utilisateurs et courses.  
+
+### 💰 **3.4 Fonctionnalités Paiement & Commission**
+✅ Paiement sécurisé via **CB, PayPal, Virement**.  
+✅ Commissions prélevées après chaque course.  
+✅ Retrait des gains pour les chauffeurs.  
+✅ Facturation automatique pour chaque course.  
+
+### 📊 **3.5 Fonctionnalités Entreprise & Location**
+✅ Ajout et gestion de **flottes de véhicules**.  
+✅ Location longue durée avec contrat digitalisé.  
+✅ Paiement des locations via **abonnement**.  
+
+---
+
+## 🔹 **4. Architecture Technique**
+### 🖥️ **4.1 Technologies utilisées**
+| **Technologie** | **Justification** |
+|----------------|------------------|
+| **Back-end** | Spring Boot (Java 21), PostgreSQL, Spring Security (JWT, OAuth2), WebSocket |
+| **Front-end** | React.js, Redux, Tailwind CSS |
+| **Mobile** | React Native (Android & iOS) |
+| **Microservices** | API Gateway (Spring Cloud), Eureka |
+| **Base de données** | PostgreSQL, Flyway |
+| **Temps réel** | WebSocket, Kafka |
+| **Sécurité** | Spring Security, JWT, OAuth2, 2FA |
+| **Déploiement** | Docker, Kubernetes, CI/CD |
+
+### 📌 **4.2 Architecture des services**
+#### 🔹 **Microservices**
+- **Service Utilisateur** (inscription, connexion, gestion de profil).  
+- **Service Course** (gestion des courses, trajets, suivi).  
+- **Service Chauffeur** (disponibilité, véhicule, gains).  
+- **Service Paiement** (transactions, retraits, commissions).  
+- **Service Notification** (SMS, e-mail, push).  
+- **Service Administration** (gestion et reporting).  
+
+---
+
+## 🔹 **5. Sécurité**
+✅ Authentification avec **JWT et OAuth2**.  
+✅ Chiffrement des données sensibles (**BCrypt, AES**).  
+✅ Protection contre les attaques **XSS, CSRF, SQL Injection**.  
+✅ Support du **2FA (double authentification)**.  
+
+---
+
+## 🔹 **6. Infrastructure et Déploiement**
+✅ **Serveur** : AWS / DigitalOcean / OVH.  
+✅ **Base de données** : PostgreSQL géré avec **Flyway**.  
+✅ **CI/CD** : GitHub Actions / GitLab CI.  
+✅ **Orchestration** : Kubernetes (K8s).  
+✅ **Surveillance** : Prometheus + Grafana.  
+
+---
+
+## 🔹 **7. Plan de Développement**
+| **Phase** | **Tâches** | **Durée estimée** |
+|----------|-----------|----------------|
+| **1. Conception** | Modélisation des bases de données, architecture, wireframes | 2 semaines |
+| **2. Développement Back-end** | API Spring Boot (Utilisateur, Course, Paiement) | 4 semaines |
+| **3. Développement Front-end** | React.js, intégration API | 4 semaines |
+| **4. Développement Mobile** | React Native (Android/iOS) | 4 semaines |
+| **5. Tests et Validation** | Tests unitaires et d’intégration | 3 semaines |
+| **6. Déploiement** | Mise en production | 2 semaines |
+
+🔹 **Durée totale estimée** : 4 à 5 mois 🚀  
+
+---
+
+## 🔹 **8. Conclusion**
+Le projet **OrleansGO** est conçu pour offrir une solution robuste et sécurisée de transport.  
+✅ **Technologies modernes** (Spring Boot, React, PostgreSQL, WebSocket).  
+✅ **Expérience utilisateur optimisée** avec un suivi en temps réel.  
+✅ **Sécurité avancée** et **paiement sécurisé**.  
+✅ **Scalabilité et flexibilité** grâce aux microservices.  
+
+---
+
+💡 **Prochaine étape** : Développement du **Service Utilisateur** 🎯  
+🔥 **Prêt à coder ?** 🚀
+
+
+---
+---
+
+# 📌 **Explication du rôle de chaque dépendance dans `pom.xml`**  
+🚀 **Spring Boot + PostgreSQL + API REST pour React.js et Mobile**
+
+---
+
+## 🟢 **1️⃣ Dépendances de base (Core Spring Boot)**  
+| **Dépendance** | **Description** |
+|--------------|------------------|
+| **spring-boot-starter-web** | Framework Spring MVC pour développer des **API RESTful**. |
+| **spring-boot-starter-actuator** | Outils de **monitoring et métriques** pour observer les performances de l'application. |
+| **spring-boot-starter-data-jpa** | Fournit **Hibernate** comme ORM pour gérer les bases de données relationnelles avec **JPA**. |
+| **spring-boot-starter-validation** | Permet de valider les entrées des utilisateurs (`@Valid`, `@NotNull`, etc.). |
+| **spring-boot-starter-mail** | Utilisé pour envoyer des **emails** (notifications, confirmation d’inscription, etc.). |
+| **lombok** | Réduit le **boilerplate code** (`@Getter`, `@Setter`, `@AllArgsConstructor`, etc.). |
+
+---
+
+## 🟡 **2️⃣ Gestion de la Base de Données (PostgreSQL & Migration)**
+| **Dépendance** | **Description** |
+|--------------|------------------|
+| **postgresql** | Driver JDBC pour connecter l’application à une **base PostgreSQL**. |
+| **flyway-core** | Gère la **migration de base de données** en appliquant automatiquement des scripts SQL lors du déploiement. |
+
+---
+
+## 🔵 **3️⃣ Sécurité et Authentification**
+| **Dépendance** | **Description** |
+|--------------|------------------|
+| **spring-boot-starter-security** | Active la **sécurité Spring Security** et protège l’application. |
+| **spring-boot-starter-oauth2-resource-server** | Permet d’utiliser **OAuth2** et **JWT** pour authentifier les utilisateurs. |
+| **jjwt (Java JWT)** | Librairie pour **générer, signer et valider des tokens JWT**. |
+| **spring-security-test** | Ajoute des **outils de test** pour tester les endpoints sécurisés. |
+
+---
+
+## 🟠 **4️⃣ Gestion des Microservices (Spring Cloud)**
+| **Dépendance** | **Description** |
+|--------------|------------------|
+| **spring-cloud-starter-gateway** | Crée une **API Gateway** pour gérer les **microservices** et la **sécurité des routes**. |
+| **spring-cloud-starter-netflix-eureka-client** | Active le **service discovery** pour que l'application trouve automatiquement d’autres microservices. |
+| **spring-cloud-dependencies** | Fournit une **gestion centralisée** des versions pour toutes les dépendances **Spring Cloud**. |
+
+---
+
+## 🟣 **5️⃣ Communication Asynchrone et Temps Réel**
+| **Dépendance** | **Description** |
+|--------------|------------------|
+| **spring-boot-starter-websocket** | Permet de gérer la **communication en temps réel** via WebSocket (ex: suivi de trajets en direct). |
+| **spring-kafka** | Active la prise en charge de **Kafka**, utile pour gérer les **événements et messages asynchrones**. |
+
+---
+
+## 🔴 **6️⃣ Tests et Debugging**
+| **Dépendance** | **Description** |
+|--------------|------------------|
+| **spring-boot-starter-test** | Fournit **JUnit 5, Mockito et AssertJ** pour les **tests unitaires et d’intégration**. |
+| **reactor-test** | Ajoute des outils pour **tester WebFlux** (si utilisé). |
+
+---
+
+## 🟢 **7️⃣ Déploiement et Infrastructure**
+| **Dépendance** | **Description** |
+|--------------|------------------|
+| **jib-maven-plugin** | Plugin Maven pour **packager l’application dans une image Docker** sans besoin de Dockerfile. |
+| **spring-boot-maven-plugin** | Plugin Maven qui **compile et exécute** l’application Spring Boot. |
+
+---
+
+# 🚀 **Résumé**
+✅ **Spring Boot Core** → Gestion des **API REST** et du cycle de vie de l’application.  
+✅ **Base de données** → PostgreSQL + Flyway pour **migration et persistance des données**.  
+✅ **Sécurité** → JWT + OAuth2 pour **authentification et autorisation**.  
+✅ **Microservices** → API Gateway + Eureka pour **gestion des services distribués**.  
+✅ **Communication temps réel** → WebSocket + Kafka pour **événements et notifications**.  
+✅ **Déploiement** → Docker (Jib) et Actuator pour **monitoring**.  
+
+🔥 **Tout est prêt ! Veux-tu que je génère une configuration `application.properties` pour PostgreSQL et JWT ?** 😃🚀
+
+
+OrleansGO
+│── service-administration
+│── service-utilisateur
+│── service-chauffeur
+│── service-vehicule
+│── service-course
+│── service-paiement
+│── service-commission
+│── service-parrainage
+│── service-securite
+│── service-notification
+│── service-support
+│── service-reporting
+│── service-reservation
+│── api-gateway
+│── config-server
+│── eureka-server
+│── shared-library
+└── README.md
