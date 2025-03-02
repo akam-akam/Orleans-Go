@@ -207,3 +207,175 @@ class CommissionServiceTest {
         verify(commissionRepository, times(1)).save(any(Commission.class));
     }
 }
+package com.orleansgo.commission.service;
+
+import com.orleansgo.commission.model.Commission;
+import com.orleansgo.commission.model.TauxCommission;
+import com.orleansgo.commission.repository.CommissionRepository;
+import com.orleansgo.commission.repository.TauxCommissionRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+public class CommissionServiceTest {
+
+    @Mock
+    private CommissionRepository commissionRepository;
+    
+    @Mock
+    private TauxCommissionRepository tauxCommissionRepository;
+
+    @InjectMocks
+    private CommissionService commissionService;
+
+    private Commission commission;
+    private TauxCommission tauxCommission;
+    private UUID commissionId;
+    private UUID tauxCommissionId;
+    private UUID trajetId;
+    private UUID conducteurId;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+        
+        commissionId = UUID.randomUUID();
+        tauxCommissionId = UUID.randomUUID();
+        trajetId = UUID.randomUUID();
+        conducteurId = UUID.randomUUID();
+        
+        tauxCommission = new TauxCommission();
+        tauxCommission.setId(tauxCommissionId);
+        tauxCommission.setTaux(new BigDecimal("0.15"));
+        tauxCommission.setTypeVehicule("STANDARD");
+        tauxCommission.setRegion("Orleans");
+        tauxCommission.setActif(true);
+        
+        commission = new Commission();
+        commission.setId(commissionId);
+        commission.setMontant(new BigDecimal("10.00"));
+        commission.setDateCreation(LocalDateTime.now());
+        commission.setTrajetId(trajetId);
+        commission.setConducteurId(conducteurId);
+        commission.setTauxApplique(tauxCommission.getTaux());
+    }
+
+    @Test
+    public void testTrouverToutesLesCommissions() {
+        when(commissionRepository.findAll()).thenReturn(Arrays.asList(commission));
+        
+        List<Commission> result = commissionService.trouverToutesLesCommissions();
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(commissionRepository, times(1)).findAll();
+    }
+
+    @Test
+    public void testTrouverCommissionParId() {
+        when(commissionRepository.findById(commissionId)).thenReturn(Optional.of(commission));
+        
+        Optional<Commission> result = commissionService.trouverCommissionParId(commissionId);
+        
+        assertNotNull(result);
+        assertEquals(commissionId, result.get().getId());
+        verify(commissionRepository, times(1)).findById(commissionId);
+    }
+
+    @Test
+    public void testEnregistrerCommission() {
+        when(commissionRepository.save(any(Commission.class))).thenReturn(commission);
+        
+        Commission result = commissionService.enregistrerCommission(commission);
+        
+        assertNotNull(result);
+        assertEquals(commissionId, result.getId());
+        verify(commissionRepository, times(1)).save(commission);
+    }
+
+    @Test
+    public void testCalculerCommission() {
+        BigDecimal montantTrajet = new BigDecimal("100.00");
+        when(tauxCommissionRepository.findActiveRateByVehicleTypeAndRegion("STANDARD", "Orleans"))
+            .thenReturn(Optional.of(tauxCommission));
+        
+        BigDecimal result = commissionService.calculerCommission(montantTrajet, "STANDARD", "Orleans");
+        
+        assertNotNull(result);
+        assertEquals(new BigDecimal("15.00"), result);  // 100 * 0.15 = 15
+    }
+
+    @Test
+    public void testTrouverCommissionsParConducteur() {
+        when(commissionRepository.findByConducteurId(conducteurId)).thenReturn(Arrays.asList(commission));
+        
+        List<Commission> result = commissionService.trouverCommissionsParConducteur(conducteurId);
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(conducteurId, result.get(0).getConducteurId());
+        verify(commissionRepository, times(1)).findByConducteurId(conducteurId);
+    }
+
+    @Test
+    public void testTrouverCommissionsParTrajet() {
+        when(commissionRepository.findByTrajetId(trajetId)).thenReturn(Optional.of(commission));
+        
+        Optional<Commission> result = commissionService.trouverCommissionParTrajet(trajetId);
+        
+        assertNotNull(result);
+        assertEquals(trajetId, result.get().getTrajetId());
+        verify(commissionRepository, times(1)).findByTrajetId(trajetId);
+    }
+
+    @Test
+    public void testTrouverCommissionsParPeriode() {
+        LocalDateTime debut = LocalDateTime.now().minusDays(1);
+        LocalDateTime fin = LocalDateTime.now().plusDays(1);
+        
+        when(commissionRepository.findByDateCreationBetween(debut, fin)).thenReturn(Arrays.asList(commission));
+        
+        List<Commission> result = commissionService.trouverCommissionsParPeriode(debut, fin);
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(commissionRepository, times(1)).findByDateCreationBetween(debut, fin);
+    }
+
+    @Test
+    public void testTrouverTauxCommissionActifs() {
+        when(tauxCommissionRepository.findByActif(true)).thenReturn(Arrays.asList(tauxCommission));
+        
+        List<TauxCommission> result = commissionService.trouverTauxCommissionActifs();
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(tauxCommissionId, result.get(0).getId());
+        verify(tauxCommissionRepository, times(1)).findByActif(true);
+    }
+
+    @Test
+    public void testEnregistrerTauxCommission() {
+        when(tauxCommissionRepository.save(any(TauxCommission.class))).thenReturn(tauxCommission);
+        
+        TauxCommission result = commissionService.enregistrerTauxCommission(tauxCommission);
+        
+        assertNotNull(result);
+        assertEquals(tauxCommissionId, result.getId());
+        verify(tauxCommissionRepository, times(1)).save(tauxCommission);
+    }
+}
