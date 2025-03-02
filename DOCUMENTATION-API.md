@@ -183,9 +183,9 @@ Base URL: `http://localhost:8087/api`
 
 ## Service Support
 
-Base URL: `http://localhost:8087/api`
+Base URL: `http://localhost:8088/api`
 
-### Endpoints
+### Endpoints Tickets
 
 | Méthode | URL | Description |
 | --- | --- | --- |
@@ -194,13 +194,28 @@ Base URL: `http://localhost:8087/api`
 | POST | `/tickets` | Création d'un nouveau ticket |
 | PUT | `/tickets/{id}` | Mise à jour d'un ticket |
 | PUT | `/tickets/{id}/status` | Mise à jour du statut d'un ticket |
-| POST | `/tickets/{id}/messages` | Ajout d'un message à un ticket |
-| GET | `/tickets/{id}/messages` | Récupération des messages d'un ticket |
-| GET | `/faq` | Récupération de toutes les questions fréquentes |
+| GET | `/tickets/user/{userId}` | Récupération des tickets d'un utilisateur |
+| GET | `/tickets/statut/{statut}` | Récupération des tickets par statut |
+| GET | `/tickets/assigned/{agentId}` | Récupération des tickets assignés à un agent |
+
+### Endpoints Messages
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| POST | `/tickets/{ticketId}/messages` | Ajout d'un message à un ticket |
+| GET | `/tickets/{ticketId}/messages` | Récupération des messages d'un ticket |
+
+### Endpoints FAQ
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| GET | `/faq` | Récupération de toutes les questions fréquentes actives |
 | GET | `/faq/{id}` | Récupération d'une question fréquente par son ID |
 | POST | `/faq` | Création d'une nouvelle question fréquente |
 | PUT | `/faq/{id}` | Mise à jour d'une question fréquente |
 | DELETE | `/faq/{id}` | Suppression d'une question fréquente |
+| GET | `/faq/categorie/{categorie}` | Récupération des FAQs par catégorie |
+| GET | `/faq/admin` | Récupération de toutes les FAQs (actives et inactives) |
 
 ## Service WebSocket
 

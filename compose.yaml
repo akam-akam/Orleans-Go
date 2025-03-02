@@ -137,7 +137,7 @@ services:
   service-administrateur:
     build: ./service-administrateur
     ports:
-      - "8086:8086"
+      - "8087:8087"
     depends_on:
       - postgres
       - discovery-server
@@ -149,12 +149,12 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     networks:
-      - orleansgo-networkrk
+      - orleansgo-network
 
   service-support:
     build: ./service-support
     ports:
-      - "8086:8086"
+      - "8088:8088"
     depends_on:
       - postgres
       - discovery-server
@@ -163,19 +163,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/support_db
       SPRING_DATASOURCE_USERNAME: orleansgo
       SPRING_DATASOURCE_PASSWORD: orleansgo
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
-      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
-    networks:
-      - orleansgo-network
-
-  service-administrateur:
-    build: ./service-administrateur
-    ports:
-      - "8087:8087"
-    depends_on:
-      - discovery-server
-      - config-server
-    environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
       SPRING_CLOUD_CONFIG_URI: http://config-server:8888
     networks:
