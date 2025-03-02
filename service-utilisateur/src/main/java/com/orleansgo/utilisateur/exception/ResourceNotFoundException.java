@@ -9,3 +9,10 @@ public class ResourceNotFoundException extends RuntimeException {
         super(message);
     }
 }
+package com.orleansgo.utilisateur.exception;
+
+public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+}

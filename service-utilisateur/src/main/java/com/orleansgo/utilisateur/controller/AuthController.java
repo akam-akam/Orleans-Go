@@ -57,3 +57,99 @@ public class AuthController {
         return login(request);
     }
 }
+package com.orleansgo.utilisateur.controller;
+
+import com.orleansgo.utilisateur.dto.AuthRequest;
+import com.orleansgo.utilisateur.dto.AuthResponse;
+import com.orleansgo.utilisateur.dto.ErrorResponse;
+import com.orleansgo.utilisateur.dto.UserRegistrationRequest;
+import com.orleansgo.utilisateur.exception.AuthenticationFailedException;
+import com.orleansgo.utilisateur.exception.EmailAlreadyExistsException;
+import com.orleansgo.utilisateur.exception.PhoneNumberAlreadyExistsException;
+import com.orleansgo.utilisateur.model.User;
+import com.orleansgo.utilisateur.service.AuthService;
+import com.orleansgo.utilisateur.service.UserService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@Slf4j
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final AuthService authService;
+    private final UserService userService;
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegistrationRequest registrationRequest) {
+        try {
+            User user = userService.registerUser(registrationRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        } catch (EmailAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorResponse(e.getMessage(), HttpStatus.CONFLICT));
+        } catch (PhoneNumberAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorResponse(e.getMessage(), HttpStatus.CONFLICT));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Erreur lors de l'enregistrement: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR));
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody AuthRequest authRequest) {
+        try {
+            AuthResponse authResponse = authService.authenticate(authRequest);
+            return ResponseEntity.ok(authResponse);
+        } catch (AuthenticationFailedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorResponse(e.getMessage(), HttpStatus.UNAUTHORIZED));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Erreur d'authentification: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR));
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestBody String refreshToken) {
+        try {
+            AuthResponse authResponse = authService.refreshToken(refreshToken);
+            return ResponseEntity.ok(authResponse);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorResponse("Erreur lors du rafraîchissement du token: " + e.getMessage(), HttpStatus.UNAUTHORIZED));
+        }
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        try {
+            // Dans une implémentation réelle, le token serait vérifié ici
+            // Pour cette démo, on extrait juste l'email du token (ce qui n'est pas sécurisé)
+            String email = token; // Dans la réalité, on décoderait le token
+            User user = userService.verifyEmail(email);
+            return ResponseEntity.ok("Email vérifié avec succès");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse("Erreur de vérification d'email: " + e.getMessage(), HttpStatus.BAD_REQUEST));
+        }
+    }
+
+    @PostMapping("/verify-phone")
+    public ResponseEntity<?> verifyPhone(@RequestParam String phoneNumber, @RequestParam String code) {
+        try {
+            // Vérifier le code dans une implémentation réelle
+            User user = userService.verifyPhone(phoneNumber);
+            return ResponseEntity.ok("Numéro de téléphone vérifié avec succès");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse("Erreur de vérification de téléphone: " + e.getMessage(), HttpStatus.BAD_REQUEST));
+        }
+    }
+}

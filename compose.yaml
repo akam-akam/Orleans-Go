@@ -1,9 +1,174 @@
+
+version: '3.8'
+
 services:
+  # Services de base de données
   postgres:
-    image: 'postgres:latest'
+    image: postgres:14-alpine
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      POSTGRES_PASSWORD: orleansgo
+      POSTGRES_USER: orleansgo
     ports:
-      - '5432'
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - orleansgo-network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - orleansgo-network
+
+  # Services d'infrastructure
+  discovery-server:
+    build: ./service-infrastructure/discovery-server
+    ports:
+      - "8761:8761"
+    networks:
+      - orleansgo-network
+
+  api-gateway:
+    build: ./service-infrastructure/api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - discovery-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    networks:
+      - orleansgo-network
+
+  config-server:
+    build: ./service-infrastructure/config-server
+    ports:
+      - "8888:8888"
+    networks:
+      - orleansgo-network
+
+  # Microservices métier
+  service-utilisateur:
+    build: ./service-utilisateur
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+      - discovery-server
+      - config-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/user_db
+      SPRING_DATASOURCE_USERNAME: orleansgo
+      SPRING_DATASOURCE_PASSWORD: orleansgo
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    networks:
+      - orleansgo-network
+
+  service-conducteur:
+    build: ./service-conducteur
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+      - discovery-server
+      - config-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/driver_db
+      SPRING_DATASOURCE_USERNAME: orleansgo
+      SPRING_DATASOURCE_PASSWORD: orleansgo
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    networks:
+      - orleansgo-network
+
+  service-trajet:
+    build: ./service-trajet
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+      - discovery-server
+      - config-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ride_db
+      SPRING_DATASOURCE_USERNAME: orleansgo
+      SPRING_DATASOURCE_PASSWORD: orleansgo
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    networks:
+      - orleansgo-network
+
+  service-paiement:
+    build: ./service-paiement
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+      - discovery-server
+      - config-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payment_db
+      SPRING_DATASOURCE_USERNAME: orleansgo
+      SPRING_DATASOURCE_PASSWORD: orleansgo
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    networks:
+      - orleansgo-network
+
+  service-notification:
+    build: ./service-notification
+    ports:
+      - "8085:8085"
+    depends_on:
+      - redis
+      - discovery-server
+      - config-server
+    environment:
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    networks:
+      - orleansgo-network
+
+  service-support:
+    build: ./service-support
+    ports:
+      - "8086:8086"
+    depends_on:
+      - postgres
+      - discovery-server
+      - config-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/support_db
+      SPRING_DATASOURCE_USERNAME: orleansgo
+      SPRING_DATASOURCE_PASSWORD: orleansgo
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    networks:
+      - orleansgo-network
+
+  service-administrateur:
+    build: ./service-administrateur
+    ports:
+      - "8087:8087"
+    depends_on:
+      - discovery-server
+      - config-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    networks:
+      - orleansgo-network
+
+networks:
+  orleansgo-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:

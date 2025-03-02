@@ -1,8 +1,42 @@
-modules = ["java-graalvm22.3"]
-run = "mvn install -all"
+
+run = "mvn spring-boot:run -f service-utilisateur/pom.xml"
+hidden = [".git", ".github", ".gitignore", "target", ".settings", ".project", ".classpath"]
 
 [nix]
-channel = "stable-24_05"
+channel = "stable-22_11"
+
+[env]
+SPRING_PROFILES_ACTIVE = "dev"
+
+[packager]
+language = "java"
+
+[packager.features]
+packageSearch = true
+enableReplit = true
+
+[languages.java]
+pattern = "**/*.java"
+
+[languages.java.languageServer]
+start = ["jdt-language-server"]
+
+[unitTest]
+language = "java"
 
 [deployment]
-run = ["sh", "-c", "mvn install -all"]
+run = ["sh", "-c", "java -jar service-utilisateur/target/service-utilisateur-0.0.1-SNAPSHOT.jar --server.address=0.0.0.0"]
+build = ["sh", "-c", "mvn package -f service-utilisateur/pom.xml"]
+deploymentTarget = "cloudrun"
+ignorePorts = false
+
+[workflows]
+runButton = "Run Service Utilisateur"
+
+[[workflows.workflow]]
+name = "Run Service Utilisateur"
+author = 40046922
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn spring-boot:run -f service-utilisateur/pom.xml"
