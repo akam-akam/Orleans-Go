@@ -103,3 +103,91 @@ public class CommissionService {
         return dto;
     }
 }
+package com.orleansgo.administrateur.service;
+
+import com.orleansgo.administrateur.model.Administrateur;
+import com.orleansgo.administrateur.model.Commission;
+import com.orleansgo.administrateur.repository.CommissionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class CommissionService {
+    private final CommissionRepository commissionRepository;
+    
+    public List<Commission> findAllCommissions() {
+        return commissionRepository.findAll();
+    }
+    
+    public Optional<Commission> findCommissionById(Long id) {
+        return commissionRepository.findById(id);
+    }
+    
+    public Optional<Commission> findCurrentCommission() {
+        return commissionRepository.findCurrentCommission();
+    }
+    
+    @Transactional
+    public Commission createCommission(Commission commission, Administrateur administrateur) {
+        commission.setModifiePar(administrateur);
+        return commissionRepository.save(commission);
+    }
+    
+    @Transactional
+    public Optional<Commission> updateCommission(Long id, Commission commissionDetails, Administrateur administrateur) {
+        return commissionRepository.findById(id)
+                .map(commission -> {
+                    if (commission.getDateFin() != null) {
+                        throw new RuntimeException("Impossible de modifier une commission qui a déjà été clôturée");
+                    }
+                    
+                    commission.setTauxCommission(commissionDetails.getTauxCommission());
+                    commission.setDescription(commissionDetails.getDescription());
+                    commission.setModifiePar(administrateur);
+                    commission.setDateModification(LocalDateTime.now());
+                    
+                    return commissionRepository.save(commission);
+                });
+    }
+    
+    @Transactional
+    public Optional<Commission> clotureCommission(Long id, Administrateur administrateur) {
+        return commissionRepository.findById(id)
+                .map(commission -> {
+                    if (commission.getDateFin() != null) {
+                        throw new RuntimeException("Cette commission a déjà été clôturée");
+                    }
+                    
+                    commission.setDateFin(LocalDateTime.now());
+                    commission.setModifiePar(administrateur);
+                    commission.setDateModification(LocalDateTime.now());
+                    
+                    return commissionRepository.save(commission);
+                });
+    }
+    
+    @Transactional
+    public Commission ajusterCommission(BigDecimal nouveauTaux, Administrateur administrateur) {
+        // On clôture la commission actuelle si elle existe
+        Optional<Commission> commissionActuelle = findCurrentCommission();
+        if (commissionActuelle.isPresent()) {
+            clotureCommission(commissionActuelle.get().getId(), administrateur);
+        }
+        
+        // On crée une nouvelle commission
+        Commission nouvelleCommission = new Commission();
+        nouvelleCommission.setTauxCommission(nouveauTaux);
+        nouvelleCommission.setDateDebut(LocalDateTime.now());
+        nouvelleCommission.setDescription("Ajustement du taux de commission");
+        nouvelleCommission.setModifiePar(administrateur);
+        
+        return commissionRepository.save(nouvelleCommission);
+    }
+}

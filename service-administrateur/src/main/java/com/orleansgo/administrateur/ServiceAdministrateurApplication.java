@@ -23,3 +23,16 @@ public class ServiceAdministrateurApplication {
         SpringApplication.run(ServiceAdministrateurApplication.class, args);
     }
 }
+package com.orleansgo.administrateur;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
+@SpringBootApplication
+@EnableDiscoveryClient
+public class ServiceAdministrateurApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ServiceAdministrateurApplication.class, args);
+    }
+}

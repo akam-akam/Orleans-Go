@@ -205,3 +205,82 @@ public class AdministrateurService {
         return dto;
     }
 }
+package com.orleansgo.administrateur.service;
+
+import com.orleansgo.administrateur.model.Administrateur;
+import com.orleansgo.administrateur.repository.AdministrateurRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class AdministrateurService {
+    private final AdministrateurRepository administrateurRepository;
+    private final PasswordEncoder passwordEncoder;
+    
+    public List<Administrateur> findAllAdministrateurs() {
+        return administrateurRepository.findAll();
+    }
+    
+    public Optional<Administrateur> findAdministrateurById(Long id) {
+        return administrateurRepository.findById(id);
+    }
+    
+    public Optional<Administrateur> findAdministrateurByEmail(String email) {
+        return administrateurRepository.findByEmail(email);
+    }
+    
+    @Transactional
+    public Administrateur createAdministrateur(Administrateur administrateur) {
+        if (administrateurRepository.existsByEmail(administrateur.getEmail())) {
+            throw new RuntimeException("Un administrateur avec cet email existe déjà");
+        }
+        
+        administrateur.setMotDePasse(passwordEncoder.encode(administrateur.getMotDePasse()));
+        administrateur.setActif(true);
+        
+        return administrateurRepository.save(administrateur);
+    }
+    
+    @Transactional
+    public Optional<Administrateur> updateAdministrateur(Long id, Administrateur administrateurDetails) {
+        return administrateurRepository.findById(id)
+                .map(administrateur -> {
+                    administrateur.setNom(administrateurDetails.getNom());
+                    administrateur.setPrenom(administrateurDetails.getPrenom());
+                    administrateur.setRole(administrateurDetails.getRole());
+                    administrateur.setActif(administrateurDetails.isActif());
+                    
+                    return administrateurRepository.save(administrateur);
+                });
+    }
+    
+    @Transactional
+    public Optional<Administrateur> updateMotDePasse(Long id, String nouveauMotDePasse) {
+        return administrateurRepository.findById(id)
+                .map(administrateur -> {
+                    administrateur.setMotDePasse(passwordEncoder.encode(nouveauMotDePasse));
+                    return administrateurRepository.save(administrateur);
+                });
+    }
+    
+    @Transactional
+    public Optional<Administrateur> updateDerniereConnexion(Long id) {
+        return administrateurRepository.findById(id)
+                .map(administrateur -> {
+                    administrateur.setDerniereConnexion(LocalDateTime.now());
+                    return administrateurRepository.save(administrateur);
+                });
+    }
+    
+    @Transactional
+    public void deleteAdministrateur(Long id) {
+        administrateurRepository.deleteById(id);
+    }
+}
