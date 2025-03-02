@@ -163,3 +163,158 @@ class PaiementServiceTest {
         assertEquals(transaction.getPaiementId(), result.get(0).getPaiementId());
     }
 }
+package com.orleansgo.paiement.service;
+
+import com.orleansgo.paiement.model.Paiement;
+import com.orleansgo.paiement.model.StatusPaiement;
+import com.orleansgo.paiement.repository.PaiementRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class PaiementServiceTest {
+
+    @Mock
+    private PaiementRepository paiementRepository;
+
+    @InjectMocks
+    private PaiementService paiementService;
+
+    private Paiement paiement;
+
+    @BeforeEach
+    void setUp() {
+        paiement = new Paiement();
+        paiement.setId(1L);
+        paiement.setTrajetId(100L);
+        paiement.setUtilisateurId(200L);
+        paiement.setConducteurId(300L);
+        paiement.setMontant(new BigDecimal("25.50"));
+        paiement.setStatus(StatusPaiement.EN_ATTENTE);
+        paiement.setDateCreation(LocalDateTime.now());
+        paiement.setMethodePaiement("CARTE");
+        paiement.setReference("PAY-REF-12345");
+    }
+
+    @Test
+    void shouldSavePaiement() {
+        when(paiementRepository.save(any(Paiement.class))).thenReturn(paiement);
+
+        Paiement savedPaiement = paiementService.savePaiement(paiement);
+
+        assertThat(savedPaiement).isNotNull();
+        assertThat(savedPaiement.getId()).isEqualTo(1L);
+        assertThat(savedPaiement.getMontant()).isEqualTo(new BigDecimal("25.50"));
+        verify(paiementRepository, times(1)).save(any(Paiement.class));
+    }
+
+    @Test
+    void shouldGetAllPaiements() {
+        when(paiementRepository.findAll()).thenReturn(Arrays.asList(paiement));
+
+        List<Paiement> paiements = paiementService.getAllPaiements();
+
+        assertThat(paiements).isNotEmpty();
+        assertThat(paiements).hasSize(1);
+        assertThat(paiements.get(0).getMontant()).isEqualTo(new BigDecimal("25.50"));
+        verify(paiementRepository, times(1)).findAll();
+    }
+
+    @Test
+    void shouldGetPaiementById() {
+        when(paiementRepository.findById(1L)).thenReturn(Optional.of(paiement));
+
+        Optional<Paiement> foundPaiement = paiementService.getPaiementById(1L);
+
+        assertThat(foundPaiement).isPresent();
+        assertThat(foundPaiement.get().getId()).isEqualTo(1L);
+        verify(paiementRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void shouldGetPaiementsByUtilisateurId() {
+        when(paiementRepository.findByUtilisateurId(200L)).thenReturn(Arrays.asList(paiement));
+
+        List<Paiement> paiements = paiementService.getPaiementsByUtilisateurId(200L);
+
+        assertThat(paiements).isNotEmpty();
+        assertThat(paiements).hasSize(1);
+        assertThat(paiements.get(0).getUtilisateurId()).isEqualTo(200L);
+        verify(paiementRepository, times(1)).findByUtilisateurId(200L);
+    }
+
+    @Test
+    void shouldGetPaiementsByConducteurId() {
+        when(paiementRepository.findByConducteurId(300L)).thenReturn(Arrays.asList(paiement));
+
+        List<Paiement> paiements = paiementService.getPaiementsByConducteurId(300L);
+
+        assertThat(paiements).isNotEmpty();
+        assertThat(paiements).hasSize(1);
+        assertThat(paiements.get(0).getConducteurId()).isEqualTo(300L);
+        verify(paiementRepository, times(1)).findByConducteurId(300L);
+    }
+
+    @Test
+    void shouldGetPaiementsByTrajetId() {
+        when(paiementRepository.findByTrajetId(100L)).thenReturn(Arrays.asList(paiement));
+
+        List<Paiement> paiements = paiementService.getPaiementsByTrajetId(100L);
+
+        assertThat(paiements).isNotEmpty();
+        assertThat(paiements).hasSize(1);
+        assertThat(paiements.get(0).getTrajetId()).isEqualTo(100L);
+        verify(paiementRepository, times(1)).findByTrajetId(100L);
+    }
+
+    @Test
+    void shouldUpdatePaiementStatus() {
+        when(paiementRepository.findById(1L)).thenReturn(Optional.of(paiement));
+        when(paiementRepository.save(any(Paiement.class))).thenReturn(paiement);
+
+        Optional<Paiement> updatedPaiement = paiementService.updatePaiementStatus(1L, StatusPaiement.COMPLETE);
+
+        assertThat(updatedPaiement).isPresent();
+        assertThat(updatedPaiement.get().getStatus()).isEqualTo(StatusPaiement.COMPLETE);
+        verify(paiementRepository, times(1)).findById(1L);
+        verify(paiementRepository, times(1)).save(any(Paiement.class));
+    }
+
+    @Test
+    void shouldProcessRemboursement() {
+        paiement.setStatus(StatusPaiement.COMPLETE);
+        when(paiementRepository.findById(1L)).thenReturn(Optional.of(paiement));
+        when(paiementRepository.save(any(Paiement.class))).thenReturn(paiement);
+
+        Optional<Paiement> remboursePaiement = paiementService.processRemboursement(1L, "Remboursement client insatisfait");
+
+        assertThat(remboursePaiement).isPresent();
+        assertThat(remboursePaiement.get().getStatus()).isEqualTo(StatusPaiement.REMBOURSE);
+        assertThat(remboursePaiement.get().getCommentaire()).isEqualTo("Remboursement client insatisfait");
+        verify(paiementRepository, times(1)).findById(1L);
+        verify(paiementRepository, times(1)).save(any(Paiement.class));
+    }
+
+    @Test
+    void shouldDeletePaiement() {
+        doNothing().when(paiementRepository).deleteById(1L);
+
+        paiementService.deletePaiement(1L);
+
+        verify(paiementRepository, times(1)).deleteById(1L);
+    }
+}

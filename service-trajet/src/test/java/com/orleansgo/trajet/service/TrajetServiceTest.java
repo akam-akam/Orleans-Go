@@ -278,3 +278,184 @@ class TrajetServiceTest {
         assertEquals(position.getTrajetId(), result.get(0).getTrajetId());
     }
 }
+package com.orleansgo.trajet.service;
+
+import com.orleansgo.trajet.model.Trajet;
+import com.orleansgo.trajet.model.StatusTrajet;
+import com.orleansgo.trajet.repository.TrajetRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class TrajetServiceTest {
+
+    @Mock
+    private TrajetRepository trajetRepository;
+
+    @InjectMocks
+    private TrajetService trajetService;
+
+    private Trajet trajet;
+
+    @BeforeEach
+    void setUp() {
+        trajet = new Trajet();
+        trajet.setId(1L);
+        trajet.setUtilisateurId(100L);
+        trajet.setConducteurId(200L);
+        trajet.setOrigineLat(47.9029);
+        trajet.setOrigineLon(1.9039);
+        trajet.setDestinationLat(47.8414);
+        trajet.setDestinationLon(1.8823);
+        trajet.setOrigineName("Orléans Centre");
+        trajet.setDestinationName("Saint-Jean-de-la-Ruelle");
+        trajet.setDistance(5.2);
+        trajet.setDureePrevue(15);
+        trajet.setPrix(new BigDecimal("12.50"));
+        trajet.setStatus(StatusTrajet.PLANIFIE);
+        trajet.setDateCreation(LocalDateTime.now());
+        trajet.setDateDepart(LocalDateTime.now().plusHours(1));
+    }
+
+    @Test
+    void shouldSaveTrajet() {
+        when(trajetRepository.save(any(Trajet.class))).thenReturn(trajet);
+
+        Trajet savedTrajet = trajetService.saveTrajet(trajet);
+
+        assertThat(savedTrajet).isNotNull();
+        assertThat(savedTrajet.getId()).isEqualTo(1L);
+        assertThat(savedTrajet.getPrix()).isEqualTo(new BigDecimal("12.50"));
+        verify(trajetRepository, times(1)).save(any(Trajet.class));
+    }
+
+    @Test
+    void shouldGetAllTrajets() {
+        when(trajetRepository.findAll()).thenReturn(Arrays.asList(trajet));
+
+        List<Trajet> trajets = trajetService.getAllTrajets();
+
+        assertThat(trajets).isNotEmpty();
+        assertThat(trajets).hasSize(1);
+        assertThat(trajets.get(0).getPrix()).isEqualTo(new BigDecimal("12.50"));
+        verify(trajetRepository, times(1)).findAll();
+    }
+
+    @Test
+    void shouldGetTrajetById() {
+        when(trajetRepository.findById(1L)).thenReturn(Optional.of(trajet));
+
+        Optional<Trajet> foundTrajet = trajetService.getTrajetById(1L);
+
+        assertThat(foundTrajet).isPresent();
+        assertThat(foundTrajet.get().getId()).isEqualTo(1L);
+        verify(trajetRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void shouldGetTrajetsByUtilisateurId() {
+        when(trajetRepository.findByUtilisateurId(100L)).thenReturn(Arrays.asList(trajet));
+
+        List<Trajet> trajets = trajetService.getTrajetsByUtilisateurId(100L);
+
+        assertThat(trajets).isNotEmpty();
+        assertThat(trajets).hasSize(1);
+        assertThat(trajets.get(0).getUtilisateurId()).isEqualTo(100L);
+        verify(trajetRepository, times(1)).findByUtilisateurId(100L);
+    }
+
+    @Test
+    void shouldGetTrajetsByConducteurId() {
+        when(trajetRepository.findByConducteurId(200L)).thenReturn(Arrays.asList(trajet));
+
+        List<Trajet> trajets = trajetService.getTrajetsByConducteurId(200L);
+
+        assertThat(trajets).isNotEmpty();
+        assertThat(trajets).hasSize(1);
+        assertThat(trajets.get(0).getConducteurId()).isEqualTo(200L);
+        verify(trajetRepository, times(1)).findByConducteurId(200L);
+    }
+
+    @Test
+    void shouldUpdateTrajetStatus() {
+        when(trajetRepository.findById(1L)).thenReturn(Optional.of(trajet));
+        when(trajetRepository.save(any(Trajet.class))).thenReturn(trajet);
+
+        Optional<Trajet> updatedTrajet = trajetService.updateTrajetStatus(1L, StatusTrajet.EN_COURS);
+
+        assertThat(updatedTrajet).isPresent();
+        assertThat(updatedTrajet.get().getStatus()).isEqualTo(StatusTrajet.EN_COURS);
+        verify(trajetRepository, times(1)).findById(1L);
+        verify(trajetRepository, times(1)).save(any(Trajet.class));
+    }
+
+    @Test
+    void shouldUpdateTrajet() {
+        Trajet updatedTrajet = new Trajet();
+        updatedTrajet.setId(1L);
+        updatedTrajet.setUtilisateurId(100L);
+        updatedTrajet.setConducteurId(200L);
+        updatedTrajet.setPrix(new BigDecimal("15.00"));
+        updatedTrajet.setStatus(StatusTrajet.EN_COURS);
+
+        when(trajetRepository.findById(1L)).thenReturn(Optional.of(trajet));
+        when(trajetRepository.save(any(Trajet.class))).thenReturn(updatedTrajet);
+
+        Optional<Trajet> result = trajetService.updateTrajet(1L, updatedTrajet);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getPrix()).isEqualTo(new BigDecimal("15.00"));
+        assertThat(result.get().getStatus()).isEqualTo(StatusTrajet.EN_COURS);
+        verify(trajetRepository, times(1)).findById(1L);
+        verify(trajetRepository, times(1)).save(any(Trajet.class));
+    }
+
+    @Test
+    void shouldDeleteTrajet() {
+        doNothing().when(trajetRepository).deleteById(1L);
+
+        trajetService.deleteTrajet(1L);
+
+        verify(trajetRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void shouldSearchTrajets() {
+        double origineLat = 47.9029;
+        double origineLon = 1.9039;
+        double destinationLat = 47.8414;
+        double destinationLon = 1.8823;
+        LocalDateTime dateDepart = LocalDateTime.now().plusHours(1);
+        
+        when(trajetRepository.findByOrigineCoordsAndDestinationCoordsAndDateDepartAfter(
+                anyDouble(), anyDouble(), anyDouble(), 
+                anyDouble(), anyDouble(), anyDouble(), 
+                any(LocalDateTime.class))).thenReturn(Arrays.asList(trajet));
+
+        List<Trajet> results = trajetService.searchTrajets(
+                origineLat, origineLon, 0.5, 
+                destinationLat, destinationLon, 0.5, 
+                dateDepart);
+
+        assertThat(results).isNotEmpty();
+        assertThat(results).hasSize(1);
+        verify(trajetRepository, times(1)).findByOrigineCoordsAndDestinationCoordsAndDateDepartAfter(
+                anyDouble(), anyDouble(), anyDouble(), 
+                anyDouble(), anyDouble(), anyDouble(), 
+                any(LocalDateTime.class));
+    }
+}

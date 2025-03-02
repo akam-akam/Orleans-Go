@@ -151,3 +151,114 @@ class NotificationServiceTest {
         verify(notificationRepository, times(1)).deleteById(1L);
     }
 }
+package com.orleansgo.notification.service;
+
+import com.orleansgo.notification.model.Notification;
+import com.orleansgo.notification.repository.NotificationRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class NotificationServiceTest {
+
+    @Mock
+    private NotificationRepository notificationRepository;
+
+    @InjectMocks
+    private NotificationService notificationService;
+
+    private Notification notification;
+
+    @BeforeEach
+    void setUp() {
+        notification = new Notification();
+        notification.setId(1L);
+        notification.setUserId(100L);
+        notification.setTitle("Test Notification");
+        notification.setContent("This is a test notification");
+        notification.setCreatedAt(LocalDateTime.now());
+        notification.setRead(false);
+    }
+
+    @Test
+    void shouldSaveNotification() {
+        when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
+
+        Notification savedNotification = notificationService.saveNotification(notification);
+
+        assertThat(savedNotification).isNotNull();
+        assertThat(savedNotification.getId()).isEqualTo(1L);
+        assertThat(savedNotification.getTitle()).isEqualTo("Test Notification");
+        verify(notificationRepository, times(1)).save(any(Notification.class));
+    }
+
+    @Test
+    void shouldGetAllNotifications() {
+        when(notificationRepository.findAll()).thenReturn(Arrays.asList(notification));
+
+        List<Notification> notifications = notificationService.getAllNotifications();
+
+        assertThat(notifications).isNotEmpty();
+        assertThat(notifications).hasSize(1);
+        assertThat(notifications.get(0).getTitle()).isEqualTo("Test Notification");
+        verify(notificationRepository, times(1)).findAll();
+    }
+
+    @Test
+    void shouldGetNotificationById() {
+        when(notificationRepository.findById(1L)).thenReturn(Optional.of(notification));
+
+        Optional<Notification> foundNotification = notificationService.getNotificationById(1L);
+
+        assertThat(foundNotification).isPresent();
+        assertThat(foundNotification.get().getId()).isEqualTo(1L);
+        verify(notificationRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void shouldGetNotificationsByUserId() {
+        when(notificationRepository.findByUserId(100L)).thenReturn(Arrays.asList(notification));
+
+        List<Notification> notifications = notificationService.getNotificationsByUserId(100L);
+
+        assertThat(notifications).isNotEmpty();
+        assertThat(notifications).hasSize(1);
+        assertThat(notifications.get(0).getUserId()).isEqualTo(100L);
+        verify(notificationRepository, times(1)).findByUserId(100L);
+    }
+
+    @Test
+    void shouldMarkNotificationAsRead() {
+        when(notificationRepository.findById(1L)).thenReturn(Optional.of(notification));
+        when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
+
+        Optional<Notification> updatedNotification = notificationService.markNotificationAsRead(1L);
+
+        assertThat(updatedNotification).isPresent();
+        assertThat(updatedNotification.get().isRead()).isTrue();
+        verify(notificationRepository, times(1)).findById(1L);
+        verify(notificationRepository, times(1)).save(any(Notification.class));
+    }
+
+    @Test
+    void shouldDeleteNotification() {
+        doNothing().when(notificationRepository).deleteById(1L);
+
+        notificationService.deleteNotification(1L);
+
+        verify(notificationRepository, times(1)).deleteById(1L);
+    }
+}
