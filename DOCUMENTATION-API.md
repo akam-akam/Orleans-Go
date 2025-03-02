@@ -127,6 +127,37 @@ Base URL: `http://localhost:8087/api`
 | PUT | `/administrateurs/{id}` | Mise à jour d'un administrateur |
 | DELETE | `/administrateurs/{id}` | Suppression d'un administrateur |
 
+## Service Sécurité
+
+Base URL: `http://localhost:8089/api`
+
+### Endpoints Authentification
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| POST | `/auth/login` | Authentification d'un utilisateur |
+| POST | `/auth/refresh` | Rafraîchissement d'un token d'accès |
+| POST | `/auth/logout` | Déconnexion d'un utilisateur |
+
+## Service Véhicule
+
+Base URL: `http://localhost:8090/api`
+
+### Endpoints Véhicule
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| GET | `/vehicules` | Récupération de tous les véhicules |
+| GET | `/vehicules/{id}` | Récupération d'un véhicule par son ID |
+| GET | `/vehicules/chauffeur/{chauffeurId}` | Récupération des véhicules d'un chauffeur |
+| GET | `/vehicules/type/{typeVehicule}` | Récupération des véhicules par type |
+| GET | `/vehicules/statut/{statut}` | Récupération des véhicules par statut |
+| GET | `/vehicules/filtrer` | Filtrage des véhicules par type et statut |
+| POST | `/vehicules` | Création d'un véhicule |
+| PUT | `/vehicules/{id}` | Mise à jour d'un véhicule |
+| DELETE | `/vehicules/{id}` | Suppression d'un véhicule |
+| PATCH | `/vehicules/{id}/statut` | Changement du statut d'un véhicule |
+
 ### Endpoints Commission
 
 | Méthode | URL | Description |
