@@ -173,6 +173,34 @@ Base URL: `http://localhost:8087/api`
 | GET | `/rapports/type/{typeDonnees}` | Récupération des rapports par type de données |
 | GET | `/rapports/administrateur/{adminId}` | Récupération des rapports créés par un administrateur |
 
+### Endpoints Statistiques
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| GET | `/statistiques/courses` | Récupération des statistiques sur les courses |
+| GET | `/statistiques/chauffeurs` | Récupération des statistiques sur les chauffeurs |
+| GET | `/statistiques/utilisateurs` | Récupération des statistiques sur les utilisateurs |
+| POST | `/statistiques/generer-rapport` | Génération d'un rapport statistique complet |
+
+### Endpoints Audit
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| GET | `/audit/user/{username}` | Récupération des logs d'audit par utilisateur |
+| GET | `/audit/entity` | Récupération des logs d'audit par entité |
+| GET | `/audit/action/{actionType}` | Récupération des logs d'audit par type d'action |
+
+### Endpoints Configuration Système
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| GET | `/configurations` | Récupération de toutes les configurations |
+| GET | `/configurations/{cle}` | Récupération d'une configuration par sa clé |
+| GET | `/configurations/type/{type}` | Récupération des configurations par type |
+| POST | `/configurations` | Création d'une nouvelle configuration |
+| PUT | `/configurations/{cle}` | Mise à jour d'une configuration |
+| DELETE | `/configurations/{cle}` | Suppression d'une configuration |
+
 ### Endpoints Sauvegarde et Restauration
 
 | Méthode | URL | Description |
