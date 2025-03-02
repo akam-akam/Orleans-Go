@@ -292,6 +292,43 @@ Base URL: `http://localhost:8088/api`
 | GET | `/faq/categorie/{categorie}` | Récupération des FAQs par catégorie |
 | GET | `/faq/admin` | Récupération de toutes les FAQs (actives et inactives) |
 
+## Service Evenement
+
+Base URL: `http://localhost:8091/api`
+
+### Endpoints Evenements
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| GET | `/evenements` | Récupération de tous les événements |
+| GET | `/evenements/{id}` | Récupération d'un événement par son ID |
+| POST | `/evenements` | Création d'un nouvel événement |
+| PUT | `/evenements/{id}` | Mise à jour d'un événement |
+| DELETE | `/evenements/{id}` | Suppression d'un événement |
+| GET | `/evenements/statut/{statut}` | Récupération des événements par statut |
+| GET | `/evenements/publics` | Récupération des événements publics |
+| GET | `/evenements/periode` | Récupération des événements par période |
+| GET | `/evenements/createur/{createurId}` | Récupération des événements créés par un utilisateur |
+| GET | `/evenements/categorie/{categorie}` | Récupération des événements par catégorie |
+| GET | `/evenements/search` | Recherche d'événements par titre |
+| PATCH | `/evenements/{id}/statut` | Mise à jour du statut d'un événement |
+
+### Endpoints Inscriptions
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| GET | `/inscriptions` | Récupération de toutes les inscriptions |
+| GET | `/inscriptions/{id}` | Récupération d'une inscription par son ID |
+| POST | `/inscriptions` | Création d'une inscription à un événement |
+| PATCH | `/inscriptions/{id}/statut` | Mise à jour du statut d'une inscription |
+| PATCH | `/inscriptions/{id}/confirmer-paiement` | Confirmation du paiement d'une inscription |
+| DELETE | `/inscriptions/{id}` | Suppression d'une inscription |
+| GET | `/inscriptions/evenement/{evenementId}` | Récupération des inscriptions pour un événement |
+| GET | `/inscriptions/utilisateur/{utilisateurId}` | Récupération des inscriptions d'un utilisateur |
+| GET | `/inscriptions/statut/{statut}` | Récupération des inscriptions par statut |
+| GET | `/inscriptions/utilisateur/{utilisateurId}/statut/{statut}` | Récupération des inscriptions d'un utilisateur par statut |
+| GET | `/inscriptions/evenement/{evenementId}/statut/{statut}` | Récupération des inscriptions pour un événement par statut |
+
 ## Service WebSocket
 
 Base URL: `ws://localhost:8083/ws`

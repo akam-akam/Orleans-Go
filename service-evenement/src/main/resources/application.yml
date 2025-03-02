@@ -1,0 +1,37 @@
+
+server:
+  port: 8091
+
+spring:
+  application:
+    name: service-evenement
+  datasource:
+    url: jdbc:postgresql://localhost:5432/evenement_db
+    username: orleansgo
+    password: orleansgo
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  cloud:
+    config:
+      uri: http://localhost:8888
+      fail-fast: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+logging:
+  level:
+    com.orleansgo.evenement: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: INFO
