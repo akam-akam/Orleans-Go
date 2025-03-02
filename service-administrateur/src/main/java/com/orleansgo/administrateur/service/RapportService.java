@@ -109,3 +109,131 @@ public class RapportService {
         return dto;
     }
 }
+package com.orleansgo.administrateur.service;
+
+import com.orleansgo.administrateur.dto.RapportDTO;
+import com.orleansgo.administrateur.model.Administrateur;
+import com.orleansgo.administrateur.model.Rapport;
+import com.orleansgo.administrateur.repository.AdministrateurRepository;
+import com.orleansgo.administrateur.repository.RapportRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+public class RapportService {
+
+    private final RapportRepository rapportRepository;
+    private final AdministrateurRepository administrateurRepository;
+
+    @Autowired
+    public RapportService(RapportRepository rapportRepository, AdministrateurRepository administrateurRepository) {
+        this.rapportRepository = rapportRepository;
+        this.administrateurRepository = administrateurRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public List<RapportDTO> getAllRapports() {
+        return rapportRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<RapportDTO> getRapportById(UUID id) {
+        return rapportRepository.findById(id)
+                .map(this::convertToDTO);
+    }
+
+    @Transactional
+    public RapportDTO createRapport(RapportDTO rapportDTO) {
+        Rapport rapport = convertToEntity(rapportDTO);
+        rapport.setDateCreation(LocalDateTime.now());
+        return convertToDTO(rapportRepository.save(rapport));
+    }
+
+    @Transactional
+    public Optional<RapportDTO> updateRapport(UUID id, RapportDTO rapportDTO) {
+        if (rapportRepository.existsById(id)) {
+            Rapport rapport = convertToEntity(rapportDTO);
+            rapport.setId(id);
+            return Optional.of(convertToDTO(rapportRepository.save(rapport)));
+        }
+        return Optional.empty();
+    }
+
+    @Transactional
+    public boolean deleteRapport(UUID id) {
+        if (rapportRepository.existsById(id)) {
+            rapportRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    @Transactional(readOnly = true)
+    public List<RapportDTO> getRapportsByPeriode(LocalDateTime debut, LocalDateTime fin) {
+        return rapportRepository.findByPeriodeDuBetween(debut, fin).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<RapportDTO> getRapportsByType(String typeDonnees) {
+        return rapportRepository.findByTypeDonnees(typeDonnees).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<RapportDTO> getRapportsByAdministrateur(UUID adminId) {
+        return rapportRepository.findByCreePar_Id(adminId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private RapportDTO convertToDTO(Rapport rapport) {
+        RapportDTO dto = new RapportDTO();
+        dto.setId(rapport.getId());
+        dto.setTitre(rapport.getTitre());
+        dto.setDescription(rapport.getDescription());
+        dto.setTypeDonnees(rapport.getTypeDonnees());
+        dto.setPeriodeDu(rapport.getPeriodeDu());
+        dto.setPeriodeAu(rapport.getPeriodeAu());
+        dto.setContenuJson(rapport.getContenuJson());
+        dto.setActif(rapport.isActif());
+        dto.setDateCreation(rapport.getDateCreation());
+        
+        if (rapport.getCreePar() != null) {
+            dto.setCreeParId(rapport.getCreePar().getId());
+        }
+        
+        return dto;
+    }
+
+    private Rapport convertToEntity(RapportDTO dto) {
+        Rapport rapport = new Rapport();
+        rapport.setId(dto.getId());
+        rapport.setTitre(dto.getTitre());
+        rapport.setDescription(dto.getDescription());
+        rapport.setTypeDonnees(dto.getTypeDonnees());
+        rapport.setPeriodeDu(dto.getPeriodeDu());
+        rapport.setPeriodeAu(dto.getPeriodeAu());
+        rapport.setContenuJson(dto.getContenuJson());
+        rapport.setActif(dto.isActif());
+        rapport.setDateCreation(dto.getDateCreation());
+        
+        if (dto.getCreeParId() != null) {
+            administrateurRepository.findById(dto.getCreeParId())
+                .ifPresent(rapport::setCreePar);
+        }
+        
+        return rapport;
+    }
+}

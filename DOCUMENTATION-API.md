@@ -115,31 +115,71 @@ Base URL: `http://localhost:8085/api`
 
 ## Service Administrateur
 
-Base URL: `http://localhost:8086/api`
+Base URL: `http://localhost:8087/api`
 
-### Endpoints
+### Endpoints Administration
 
 | Méthode | URL | Description |
 | --- | --- | --- |
 | GET | `/administrateurs` | Récupération de tous les administrateurs |
 | GET | `/administrateurs/{id}` | Récupération d'un administrateur par son ID |
-| POST | `/administrateurs` | Création d'un nouvel administrateur |
+| POST | `/administrateurs` | Création d'un administrateur |
 | PUT | `/administrateurs/{id}` | Mise à jour d'un administrateur |
 | DELETE | `/administrateurs/{id}` | Suppression d'un administrateur |
+
+### Endpoints Commission
+
+| Méthode | URL | Description |
+| --- | --- | --- |
 | GET | `/commissions` | Récupération de toutes les commissions |
 | GET | `/commissions/{id}` | Récupération d'une commission par son ID |
-| GET | `/commissions/current` | Récupération de la commission actuelle |
-| POST | `/commissions` | Création d'une nouvelle commission |
+| POST | `/commissions` | Création d'une commission |
 | PUT | `/commissions/{id}` | Mise à jour d'une commission |
-| PUT | `/commissions/{id}/cloturer` | Clôture d'une commission |
-| POST | `/commissions/ajuster` | Ajustement du taux de commission |
+| DELETE | `/commissions/{id}` | Suppression d'une commission |
+
+### Endpoints Vérification Documents
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| GET | `/verifications` | Récupération de toutes les vérifications |
+| GET | `/verifications/{id}` | Récupération d'une vérification par son ID |
+| POST | `/verifications` | Création d'une vérification |
+| PUT | `/verifications/{id}` | Mise à jour d'une vérification |
+| PUT | `/verifications/{id}/valider` | Valider les documents d'un conducteur |
+| PUT | `/verifications/{id}/rejeter` | Rejeter les documents d'un conducteur |
+| GET | `/verifications/en-attente` | Récupération des vérifications en attente |
+
+### Endpoints Programme Parrainage
+
+| Méthode | URL | Description |
+| --- | --- | --- |
 | GET | `/parrainages` | Récupération de tous les programmes de parrainage |
 | GET | `/parrainages/{id}` | Récupération d'un programme de parrainage par son ID |
-| GET | `/parrainages/current` | Récupération du programme de parrainage actuel |
-| POST | `/parrainages` | Création d'un nouveau programme de parrainage |
+| POST | `/parrainages` | Création d'un programme de parrainage |
 | PUT | `/parrainages/{id}` | Mise à jour d'un programme de parrainage |
-| PUT | `/parrainages/{id}/cloturer` | Clôture d'un programme de parrainage |
-| POST | `/parrainages/configurer` | Configuration d'un nouveau programme de parrainage |
+| DELETE | `/parrainages/{id}` | Suppression d'un programme de parrainage |
+| GET | `/parrainages/actifs` | Récupération des programmes de parrainage actifs |
+
+### Endpoints Rapports et Statistiques
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| GET | `/rapports` | Récupération de tous les rapports |
+| GET | `/rapports/{id}` | Récupération d'un rapport par son ID |
+| POST | `/rapports` | Création d'un rapport |
+| PUT | `/rapports/{id}` | Mise à jour d'un rapport |
+| DELETE | `/rapports/{id}` | Suppression d'un rapport |
+| GET | `/rapports/periode` | Récupération des rapports par période |
+| GET | `/rapports/type/{typeDonnees}` | Récupération des rapports par type de données |
+| GET | `/rapports/administrateur/{adminId}` | Récupération des rapports créés par un administrateur |
+
+### Endpoints Sauvegarde et Restauration
+
+| Méthode | URL | Description |
+| --- | --- | --- |
+| POST | `/sauvegardes/creer` | Création d'une sauvegarde complète des données |
+| POST | `/sauvegardes/restaurer` | Restauration d'une sauvegarde (nécessite un fichier) |
+
 
 ## Service Support
 

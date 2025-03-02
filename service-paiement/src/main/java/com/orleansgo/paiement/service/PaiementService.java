@@ -1,194 +1,198 @@
 package com.orleansgo.paiement.service;
 
 import com.orleansgo.paiement.dto.PaiementDTO;
-import com.orleansgo.paiement.exception.ResourceNotFoundException;
-import com.orleansgo.paiement.mapper.PaiementMapper;
+import com.orleansgo.paiement.enumeration.MethodePaiement;
+import com.orleansgo.paiement.enumeration.StatutPaiement;
+import com.orleansgo.paiement.exception.PaiementException;
 import com.orleansgo.paiement.model.Paiement;
 import com.orleansgo.paiement.repository.PaiementRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@Service
-@RequiredArgsConstructor
-public class PaiementService {
-
-    private final PaiementRepository paiementRepository;
-    private final PaiementMapper paiementMapper;
-
-    public PaiementDTO creerPaiement(PaiementDTO paiementDTO) {
-        Paiement paiement = paiementMapper.toEntity(paiementDTO);
-        return paiementMapper.toDTO(paiementRepository.save(paiement));
-    }
-
-    public List<PaiementDTO> listerTousLesPaiements() {
-        return paiementRepository.findAll().stream()
-                .map(paiementMapper::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    public PaiementDTO trouverParId(UUID id) {
-        return paiementRepository.findById(id)
-                .map(paiementMapper::toDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Paiement non trouvé"));
-    }
-
-    public void supprimerPaiement(UUID id) {
-        paiementRepository.deleteById(id);
-    }
-}
-package com.orleansgo.paiement.service;
-
-import com.orleansgo.paiement.dto.PaiementDTO;
-import com.orleansgo.paiement.dto.TransactionDTO;
-import com.orleansgo.paiement.exception.ResourceNotFoundException;
-import com.orleansgo.paiement.model.MethodePaiement;
-import com.orleansgo.paiement.model.Paiement;
-import com.orleansgo.paiement.model.StatutPaiement;
-import com.orleansgo.paiement.model.Transaction;
-import com.orleansgo.paiement.repository.PaiementRepository;
-import com.orleansgo.paiement.repository.TransactionRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
-@RequiredArgsConstructor
 public class PaiementService {
 
     private final PaiementRepository paiementRepository;
-    private final TransactionRepository transactionRepository;
-    private final CommissionService commissionService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public List<PaiementDTO> getAllPaiements() {
-        return paiementRepository.findAll().stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-    }
-
-    public PaiementDTO getPaiementById(UUID id) {
-        Paiement paiement = paiementRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Paiement non trouvé avec l'ID: " + id));
-        return mapToDTO(paiement);
-    }
-
-    public List<PaiementDTO> getPaiementsByUserId(UUID userId) {
-        return paiementRepository.findByUserId(userId).stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-    }
-
-    public List<PaiementDTO> getPaiementsByTrajetId(UUID trajetId) {
-        return paiementRepository.findByTrajetId(trajetId).stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+    @Autowired
+    public PaiementService(PaiementRepository paiementRepository, KafkaTemplate<String, Object> kafkaTemplate) {
+        this.paiementRepository = paiementRepository;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     @Transactional
-    public PaiementDTO initierPaiement(PaiementDTO paiementDTO) {
-        Paiement paiement = Paiement.builder()
-                .userId(paiementDTO.getUserId())
-                .trajetId(paiementDTO.getTrajetId())
-                .montant(paiementDTO.getMontant())
-                .methode(paiementDTO.getMethode())
-                .statut(StatutPaiement.EN_ATTENTE)
-                .dateCreation(LocalDateTime.now())
-                .build();
-        
-        Paiement savedPaiement = paiementRepository.save(paiement);
-        
-        // Publier un événement pour le traitement asynchrone
-        kafkaTemplate.send("paiements-initiations", savedPaiement.getId().toString(), savedPaiement);
-        
-        return mapToDTO(savedPaiement);
+    public PaiementDTO creerPaiement(PaiementDTO paiementDTO) {
+        // Validation des données
+        if (paiementDTO.getMontant().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new PaiementException("Le montant du paiement doit être supérieur à zéro");
+        }
+
+        if (paiementDTO.getTrajetId() == null) {
+            throw new PaiementException("L'ID du trajet est obligatoire");
+        }
+
+        if (paiementDTO.getMethodePaiement() == null) {
+            throw new PaiementException("La méthode de paiement est obligatoire");
+        }
+
+        // Création du paiement
+        Paiement paiement = new Paiement();
+        paiement.setTrajetId(paiementDTO.getTrajetId());
+        paiement.setPassagerId(paiementDTO.getPassagerId());
+        paiement.setChauffeurId(paiementDTO.getChauffeurId());
+        paiement.setMontant(paiementDTO.getMontant());
+        paiement.setMethodePaiement(paiementDTO.getMethodePaiement());
+        paiement.setStatut(StatutPaiement.EN_ATTENTE);
+        paiement.setDateCreation(LocalDateTime.now());
+        paiement.setReference(genererReference());
+
+        paiement = paiementRepository.save(paiement);
+
+        // Notification de création de paiement via Kafka
+        Map<String, Object> notification = new HashMap<>();
+        notification.put("action", "PAIEMENT_CREE");
+        notification.put("paiementId", paiement.getId().toString());
+        notification.put("trajetId", paiement.getTrajetId().toString());
+        notification.put("montant", paiement.getMontant());
+        notification.put("reference", paiement.getReference());
+
+        kafkaTemplate.send("paiements", notification);
+
+        return convertToDTO(paiement);
     }
 
     @Transactional
-    public PaiementDTO confirmerPaiement(UUID paiementId, String referenceTransaction) {
+    public PaiementDTO traiterPaiement(UUID paiementId, String referenceTransaction) {
         Paiement paiement = paiementRepository.findById(paiementId)
-                .orElseThrow(() -> new ResourceNotFoundException("Paiement non trouvé avec l'ID: " + paiementId));
-        
-        paiement.setStatut(StatutPaiement.COMPLETE);
-        paiement.setReferenceTransaction(referenceTransaction);
-        paiement.setDatePaiement(LocalDateTime.now());
-        
-        Paiement updatedPaiement = paiementRepository.save(paiement);
-        
-        // Calculer et enregistrer la commission
-        BigDecimal montantCommission = commissionService.calculerCommission(paiement.getMontant());
-        
-        // Enregistrer la transaction pour le chauffeur
-        Transaction transactionChauffeur = Transaction.builder()
-                .paiementId(paiementId)
-                .userId(paiement.getChauffeurId())
-                .montant(paiement.getMontant().subtract(montantCommission))
-                .type("CREDIT")
-                .description("Paiement pour course #" + paiement.getTrajetId())
-                .dateTransaction(LocalDateTime.now())
-                .build();
-        
-        transactionRepository.save(transactionChauffeur);
-        
-        // Enregistrer la commission pour la plateforme
-        Transaction transactionCommission = Transaction.builder()
-                .paiementId(paiementId)
-                .userId(null) // Plateforme
-                .montant(montantCommission)
-                .type("COMMISSION")
-                .description("Commission sur course #" + paiement.getTrajetId())
-                .dateTransaction(LocalDateTime.now())
-                .build();
-        
-        transactionRepository.save(transactionCommission);
-        
-        // Publier un événement pour la notification
-        kafkaTemplate.send("paiements-confirmations", updatedPaiement.getId().toString(), updatedPaiement);
-        
-        return mapToDTO(updatedPaiement);
+                .orElseThrow(() -> new PaiementException("Paiement non trouvé avec l'ID: " + paiementId));
+
+        if (paiement.getStatut() != StatutPaiement.EN_ATTENTE) {
+            throw new PaiementException("Ce paiement a déjà été traité");
+        }
+
+        // Simulation de traitement selon la méthode de paiement
+        boolean paiementReussi = simulerPaiement(paiement.getMethodePaiement(), paiement.getMontant());
+
+        if (paiementReussi) {
+            paiement.setStatut(StatutPaiement.COMPLETE);
+            paiement.setReferenceTransaction(referenceTransaction);
+            paiement.setDateValidation(LocalDateTime.now());
+
+            // Notification de paiement réussi
+            Map<String, Object> notification = new HashMap<>();
+            notification.put("action", "PAIEMENT_REUSSI");
+            notification.put("paiementId", paiement.getId().toString());
+            notification.put("trajetId", paiement.getTrajetId().toString());
+            notification.put("montant", paiement.getMontant());
+            notification.put("reference", paiement.getReference());
+
+            kafkaTemplate.send("paiements", notification);
+        } else {
+            paiement.setStatut(StatutPaiement.ECHOUE);
+
+            // Notification d'échec de paiement
+            Map<String, Object> notification = new HashMap<>();
+            notification.put("action", "PAIEMENT_ECHOUE");
+            notification.put("paiementId", paiement.getId().toString());
+            notification.put("trajetId", paiement.getTrajetId().toString());
+            notification.put("montant", paiement.getMontant());
+            notification.put("reference", paiement.getReference());
+
+            kafkaTemplate.send("paiements", notification);
+        }
+
+        paiement = paiementRepository.save(paiement);
+        return convertToDTO(paiement);
     }
 
     @Transactional
-    public PaiementDTO annulerPaiement(UUID paiementId, String raisonAnnulation) {
+    public PaiementDTO annulerPaiement(UUID paiementId, String raison) {
         Paiement paiement = paiementRepository.findById(paiementId)
-                .orElseThrow(() -> new ResourceNotFoundException("Paiement non trouvé avec l'ID: " + paiementId));
-        
+                .orElseThrow(() -> new PaiementException("Paiement non trouvé avec l'ID: " + paiementId));
+
+        if (paiement.getStatut() == StatutPaiement.COMPLETE) {
+            throw new PaiementException("Impossible d'annuler un paiement déjà complété");
+        }
+
         paiement.setStatut(StatutPaiement.ANNULE);
-        paiement.setCommentaire(raisonAnnulation);
-        paiement.setDateMiseAJour(LocalDateTime.now());
-        
-        Paiement updatedPaiement = paiementRepository.save(paiement);
-        
-        // Publier un événement pour la notification
-        kafkaTemplate.send("paiements-annulations", updatedPaiement.getId().toString(), updatedPaiement);
-        
-        return mapToDTO(updatedPaiement);
+        paiement.setCommentaires(raison);
+
+        // Notification d'annulation de paiement
+        Map<String, Object> notification = new HashMap<>();
+        notification.put("action", "PAIEMENT_ANNULE");
+        notification.put("paiementId", paiement.getId().toString());
+        notification.put("trajetId", paiement.getTrajetId().toString());
+        notification.put("raison", raison);
+
+        kafkaTemplate.send("paiements", notification);
+
+        paiement = paiementRepository.save(paiement);
+        return convertToDTO(paiement);
     }
 
-    private PaiementDTO mapToDTO(Paiement paiement) {
-        return PaiementDTO.builder()
-                .id(paiement.getId())
-                .userId(paiement.getUserId())
-                .chauffeurId(paiement.getChauffeurId())
-                .trajetId(paiement.getTrajetId())
-                .montant(paiement.getMontant())
-                .methode(paiement.getMethode())
-                .statut(paiement.getStatut())
-                .referenceTransaction(paiement.getReferenceTransaction())
-                .commentaire(paiement.getCommentaire())
-                .dateCreation(paiement.getDateCreation())
-                .datePaiement(paiement.getDatePaiement())
-                .dateMiseAJour(paiement.getDateMiseAJour())
-                .build();
+    @Transactional(readOnly = true)
+    public PaiementDTO getPaiementById(UUID id) {
+        return paiementRepository.findById(id)
+                .map(this::convertToDTO)
+                .orElseThrow(() -> new PaiementException("Paiement non trouvé avec l'ID: " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaiementDTO> getPaiementsByTrajet(UUID trajetId) {
+        return paiementRepository.findByTrajetId(trajetId).stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaiementDTO> getPaiementsByPassager(UUID passagerId) {
+        return paiementRepository.findByPassagerId(passagerId).stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaiementDTO> getPaiementsByChauffeur(UUID chauffeurId) {
+        return paiementRepository.findByChauffeurId(chauffeurId).stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+
+    // Méthode pour simuler le traitement d'un paiement
+    private boolean simulerPaiement(MethodePaiement methode, BigDecimal montant) {
+        // Dans un environnement réel, cette méthode ferait appel à un service de paiement tiers
+        // Pour l'exemple, on simule une réussite dans 90% des cas
+        Random random = new Random();
+        return random.nextDouble() <= 0.9;
+    }
+
+    // Génération d'une référence unique pour le paiement
+    private String genererReference() {
+        return "PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    // Conversion Entité vers DTO
+    private PaiementDTO convertToDTO(Paiement paiement) {
+        PaiementDTO dto = new PaiementDTO();
+        dto.setId(paiement.getId());
+        dto.setTrajetId(paiement.getTrajetId());
+        dto.setPassagerId(paiement.getPassagerId());
+        dto.setChauffeurId(paiement.getChauffeurId());
+        dto.setMontant(paiement.getMontant());
+        dto.setMethodePaiement(paiement.getMethodePaiement());
+        dto.setStatut(paiement.getStatut());
+        dto.setReference(paiement.getReference());
+        dto.setReferenceTransaction(paiement.getReferenceTransaction());
+        dto.setCommentaires(paiement.getCommentaires());
+        dto.setDateCreation(paiement.getDateCreation());
+        dto.setDateValidation(paiement.getDateValidation());
+        return dto;
     }
 }

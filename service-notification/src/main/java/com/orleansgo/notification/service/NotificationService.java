@@ -1,137 +1,134 @@
 package com.orleansgo.notification.service;
 
-import com.orleansgo.notification.dto.NotificationDTO;
-import com.orleansgo.notification.exception.NotificationException;
-import com.orleansgo.notification.mapper.NotificationMapper;
 import com.orleansgo.notification.model.Notification;
 import com.orleansgo.notification.repository.NotificationRepository;
-import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@Service
-@RequiredArgsConstructor
-public class NotificationService {
-
-    private final NotificationRepository notificationRepository;
-    private final NotificationMapper notificationMapper;
-
-    public NotificationDTO creerNotification(NotificationDTO notificationDTO) {
-        Notification notification = notificationMapper.toEntity(notificationDTO);
-        return notificationMapper.toDTO(notificationRepository.save(notification));
-    }
-
-    public List<NotificationDTO> listerToutesLesNotifications() {
-        return notificationRepository.findAll().stream()
-                .map(notificationMapper::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    public NotificationDTO trouverParId(UUID id) {
-        return notificationRepository.findById(id)
-                .map(notificationMapper::toDTO)
-                .orElseThrow(() -> new NotificationException("Notification non trouvée"));
-    }
-
-    public void supprimerNotification(UUID id) {
-        notificationRepository.deleteById(id);
-    }
-}
-package com.orleansgo.notification.service;
-
-import com.orleansgo.notification.dto.EmailNotificationDTO;
-import com.orleansgo.notification.dto.PushNotificationDTO;
-import com.orleansgo.notification.dto.SmsNotificationDTO;
-import com.orleansgo.notification.model.Notification;
-import com.orleansgo.notification.model.NotificationType;
-import com.orleansgo.notification.repository.NotificationRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class NotificationService {
 
-    private final NotificationRepository notificationRepository;
-    private final JavaMailSender emailSender;
-    private final RestTemplate restTemplate;
+    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
-    @Transactional
-    public void sendEmailNotification(EmailNotificationDTO emailDTO) {
-        // Envoyer l'email
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(emailDTO.getDestinataire());
-        message.setSubject(emailDTO.getSujet());
-        message.setText(emailDTO.getContenu());
-        emailSender.send(message);
-        
-        // Enregistrer la notification
+    private final NotificationRepository notificationRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    @Autowired
+    public NotificationService(
+            NotificationRepository notificationRepository,
+            SimpMessagingTemplate messagingTemplate,
+            KafkaTemplate<String, Object> kafkaTemplate) {
+        this.notificationRepository = notificationRepository;
+        this.messagingTemplate = messagingTemplate;
+        this.kafkaTemplate = kafkaTemplate;
+    }
+
+    public Notification creerNotification(String type, String contenu, UUID utilisateurId) {
         Notification notification = new Notification();
-        notification.setUserId(emailDTO.getUserId());
-        notification.setType(NotificationType.EMAIL);
-        notification.setTitre(emailDTO.getSujet());
-        notification.setContenu(emailDTO.getContenu());
-        notification.setDateEnvoi(LocalDateTime.now());
-        notification.setLu(false);
-        
-        notificationRepository.save(notification);
+        notification.setType(type);
+        notification.setContenu(contenu);
+        notification.setUtilisateurId(utilisateurId);
+        notification.setDateCreation(LocalDateTime.now());
+        notification.setLue(false);
+
+        notification = notificationRepository.save(notification);
+
+        // Envoyer la notification via WebSocket
+        messagingTemplate.convertAndSendToUser(
+                utilisateurId.toString(),
+                "/queue/notifications",
+                notification
+        );
+
+        return notification;
     }
-    
-    @Transactional
-    public void sendSmsNotification(SmsNotificationDTO smsDTO) {
-        // Logique d'envoi de SMS (via un service tiers)
-        // Exemple avec API SMS
-        // restTemplate.postForEntity("URL_API_SMS", smsDTO, String.class);
-        
-        // Enregistrer la notification
-        Notification notification = new Notification();
-        notification.setUserId(smsDTO.getUserId());
-        notification.setType(NotificationType.SMS);
-        notification.setTitre("Notification SMS");
-        notification.setContenu(smsDTO.getMessage());
-        notification.setDateEnvoi(LocalDateTime.now());
-        notification.setLu(false);
-        
-        notificationRepository.save(notification);
+
+    public void envoyerNotificationKafka(String topic, Map<String, Object> message) {
+        kafkaTemplate.send(topic, message);
+        logger.info("Notification envoyée au topic Kafka: {}", topic);
     }
-    
-    @Transactional
-    public void sendPushNotification(PushNotificationDTO pushDTO) {
-        // Logique d'envoi de notification push (via Firebase ou autre)
-        // restTemplate.postForEntity("URL_API_PUSH", pushDTO, String.class);
-        
-        // Enregistrer la notification
-        Notification notification = new Notification();
-        notification.setUserId(pushDTO.getUserId());
-        notification.setType(NotificationType.PUSH);
-        notification.setTitre(pushDTO.getTitre());
-        notification.setContenu(pushDTO.getMessage());
-        notification.setDateEnvoi(LocalDateTime.now());
-        notification.setLu(false);
-        
-        notificationRepository.save(notification);
+
+    @KafkaListener(topics = "nouvelle-course", groupId = "${spring.kafka.consumer.group-id}")
+    public void ecouterNouvelleCourse(Map<String, Object> message) {
+        logger.info("Nouvelle course reçue: {}", message);
+
+        if (message.containsKey("chauffeurId") && message.containsKey("passagerId")) {
+            // Notifier le chauffeur
+            UUID chauffeurId = UUID.fromString(message.get("chauffeurId").toString());
+            String adresseDepart = message.get("adresseDepart").toString();
+
+            creerNotification(
+                    "NOUVELLE_COURSE",
+                    "Nouvelle demande de course à " + adresseDepart,
+                    chauffeurId
+            );
+
+            // Notifier le passager
+            UUID passagerId = UUID.fromString(message.get("passagerId").toString());
+            creerNotification(
+                    "COURSE_CONFIRMEE",
+                    "Votre course a été prise en compte et un chauffeur a été assigné",
+                    passagerId
+            );
+        }
     }
-    
-    public List<Notification> getUserNotifications(UUID userId) {
-        return notificationRepository.findByUserIdOrderByDateEnvoiDesc(userId);
+
+    @KafkaListener(topics = "annulation-course", groupId = "${spring.kafka.consumer.group-id}")
+    public void ecouterAnnulationCourse(Map<String, Object> message) {
+        logger.info("Annulation de course reçue: {}", message);
+
+        if (message.containsKey("chauffeurId") && message.containsKey("passagerId")) {
+            UUID chauffeurId = UUID.fromString(message.get("chauffeurId").toString());
+            UUID passagerId = UUID.fromString(message.get("passagerId").toString());
+            String raison = message.getOrDefault("raison", "Aucune raison spécifiée").toString();
+
+            // Notifier le chauffeur
+            creerNotification(
+                    "COURSE_ANNULEE",
+                    "Course annulée. Raison: " + raison,
+                    chauffeurId
+            );
+
+            // Notifier le passager
+            creerNotification(
+                    "COURSE_ANNULEE",
+                    "Votre course a été annulée. Raison: " + raison,
+                    passagerId
+            );
+        }
     }
-    
-    @Transactional
-    public void markNotificationAsRead(UUID notificationId) {
+
+    public List<Notification> getNotificationsUtilisateur(UUID utilisateurId) {
+        return notificationRepository.findByUtilisateurIdOrderByDateCreationDesc(utilisateurId);
+    }
+
+    public List<Notification> getNotificationsNonLues(UUID utilisateurId) {
+        return notificationRepository.findByUtilisateurIdAndLueFalseOrderByDateCreationDesc(utilisateurId);
+    }
+
+    public Notification marquerCommeLue(UUID notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification non trouvée"));
-        notification.setLu(true);
-        notification.setDateLecture(LocalDateTime.now());
-        notificationRepository.save(notification);
+        notification.setLue(true);
+        return notificationRepository.save(notification);
+    }
+
+    public void marquerToutesCommeLues(UUID utilisateurId) {
+        List<Notification> notifications = notificationRepository.findByUtilisateurIdAndLueFalse(utilisateurId);
+        for (Notification notification : notifications) {
+            notification.setLue(true);
+        }
+        notificationRepository.saveAll(notifications);
     }
 }
