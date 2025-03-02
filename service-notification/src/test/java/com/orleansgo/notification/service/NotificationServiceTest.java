@@ -262,3 +262,160 @@ public class NotificationServiceTest {
         verify(notificationRepository, times(1)).deleteById(1L);
     }
 }
+package com.orleansgo.notification.service;
+
+import com.orleansgo.notification.dto.NotificationDTO;
+import com.orleansgo.notification.model.Notification;
+import com.orleansgo.notification.model.TypeNotification;
+import com.orleansgo.notification.repository.NotificationRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+public class NotificationServiceTest {
+
+    @Mock
+    private NotificationRepository notificationRepository;
+
+    @InjectMocks
+    private NotificationService notificationService;
+
+    private Notification notification;
+    private NotificationDTO notificationDTO;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        notification = new Notification();
+        notification.setId(1L);
+        notification.setUtilisateurId(100L);
+        notification.setType(TypeNotification.EMAIL);
+        notification.setContenu("Nouveau message: votre trajet commence bientôt");
+        notification.setDateCreation(LocalDateTime.now());
+        notification.setLu(false);
+
+        notificationDTO = new NotificationDTO();
+        notificationDTO.setId(1L);
+        notificationDTO.setUtilisateurId(100L);
+        notificationDTO.setType(TypeNotification.EMAIL);
+        notificationDTO.setContenu("Nouveau message: votre trajet commence bientôt");
+        notificationDTO.setDateCreation(LocalDateTime.now());
+        notificationDTO.setLu(false);
+    }
+
+    @Test
+    void testFindAll() {
+        when(notificationRepository.findAll()).thenReturn(Arrays.asList(notification));
+        
+        List<NotificationDTO> result = notificationService.findAll();
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(notificationDTO.getId(), result.get(0).getId());
+        verify(notificationRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testFindById() {
+        when(notificationRepository.findById(1L)).thenReturn(Optional.of(notification));
+        
+        NotificationDTO result = notificationService.findById(1L);
+        
+        assertNotNull(result);
+        assertEquals(notificationDTO.getId(), result.getId());
+        verify(notificationRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testFindByUtilisateurId() {
+        when(notificationRepository.findByUtilisateurId(100L)).thenReturn(Arrays.asList(notification));
+        
+        List<NotificationDTO> result = notificationService.findByUtilisateurId(100L);
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(notificationDTO.getId(), result.get(0).getId());
+        verify(notificationRepository, times(1)).findByUtilisateurId(100L);
+    }
+
+    @Test
+    void testCreate() {
+        when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
+        
+        NotificationDTO result = notificationService.create(notificationDTO);
+        
+        assertNotNull(result);
+        assertEquals(notificationDTO.getId(), result.getId());
+        verify(notificationRepository, times(1)).save(any(Notification.class));
+    }
+
+    @Test
+    void testMarkAsRead() {
+        notification.setLu(true);
+        when(notificationRepository.findById(1L)).thenReturn(Optional.of(notification));
+        when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
+        
+        NotificationDTO result = notificationService.markAsRead(1L);
+        
+        assertNotNull(result);
+        assertTrue(result.isLu());
+        verify(notificationRepository, times(1)).findById(1L);
+        verify(notificationRepository, times(1)).save(any(Notification.class));
+    }
+
+    @Test
+    void testDelete() {
+        when(notificationRepository.findById(1L)).thenReturn(Optional.of(notification));
+        doNothing().when(notificationRepository).deleteById(1L);
+        
+        notificationService.delete(1L);
+        
+        verify(notificationRepository, times(1)).findById(1L);
+        verify(notificationRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void testSendEmail() {
+        when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
+        
+        NotificationDTO result = notificationService.sendEmail("test@example.com", "Sujet", "Contenu", 100L);
+        
+        assertNotNull(result);
+        assertEquals(TypeNotification.EMAIL, result.getType());
+        verify(notificationRepository, times(1)).save(any(Notification.class));
+    }
+
+    @Test
+    void testSendSMS() {
+        when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
+        
+        NotificationDTO result = notificationService.sendSMS("+33612345678", "Contenu", 100L);
+        
+        assertNotNull(result);
+        assertEquals(TypeNotification.SMS, result.getType());
+        verify(notificationRepository, times(1)).save(any(Notification.class));
+    }
+
+    @Test
+    void testSendPush() {
+        when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
+        
+        NotificationDTO result = notificationService.sendPush("token123", "Titre", "Contenu", 100L);
+        
+        assertNotNull(result);
+        assertEquals(TypeNotification.PUSH, result.getType());
+        verify(notificationRepository, times(1)).save(any(Notification.class));
+    }
+}

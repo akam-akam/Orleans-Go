@@ -459,3 +459,143 @@ public class TrajetServiceTest {
                 any(LocalDateTime.class));
     }
 }
+package com.orleansgo.trajet.service;
+
+import com.orleansgo.trajet.dto.TrajetDTO;
+import com.orleansgo.trajet.model.Trajet;
+import com.orleansgo.trajet.model.StatutTrajet;
+import com.orleansgo.trajet.repository.TrajetRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+public class TrajetServiceTest {
+
+    @Mock
+    private TrajetRepository trajetRepository;
+
+    @InjectMocks
+    private TrajetService trajetService;
+
+    private Trajet trajet;
+    private TrajetDTO trajetDTO;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        trajet = new Trajet();
+        trajet.setId(1L);
+        trajet.setLieuDepart("Orléans Centre");
+        trajet.setLieuArrivee("Fleury-les-Aubrais");
+        trajet.setDateDepart(LocalDateTime.now().plusHours(1));
+        trajet.setNombrePlaces(3);
+        trajet.setPrix(5.50);
+        trajet.setConducteurId(1L);
+        trajet.setStatut(StatutTrajet.PLANIFIE);
+
+        trajetDTO = new TrajetDTO();
+        trajetDTO.setId(1L);
+        trajetDTO.setLieuDepart("Orléans Centre");
+        trajetDTO.setLieuArrivee("Fleury-les-Aubrais");
+        trajetDTO.setDateDepart(LocalDateTime.now().plusHours(1));
+        trajetDTO.setNombrePlaces(3);
+        trajetDTO.setPrix(5.50);
+        trajetDTO.setConducteurId(1L);
+        trajetDTO.setStatut(StatutTrajet.PLANIFIE);
+    }
+
+    @Test
+    void testFindAll() {
+        when(trajetRepository.findAll()).thenReturn(Arrays.asList(trajet));
+        
+        List<TrajetDTO> result = trajetService.findAll();
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(trajetDTO.getId(), result.get(0).getId());
+        verify(trajetRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testFindById() {
+        when(trajetRepository.findById(1L)).thenReturn(Optional.of(trajet));
+        
+        TrajetDTO result = trajetService.findById(1L);
+        
+        assertNotNull(result);
+        assertEquals(trajetDTO.getId(), result.getId());
+        verify(trajetRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testFindByConducteurId() {
+        when(trajetRepository.findByConducteurId(1L)).thenReturn(Arrays.asList(trajet));
+        
+        List<TrajetDTO> result = trajetService.findByConducteurId(1L);
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(trajetDTO.getId(), result.get(0).getId());
+        verify(trajetRepository, times(1)).findByConducteurId(1L);
+    }
+
+    @Test
+    void testCreate() {
+        when(trajetRepository.save(any(Trajet.class))).thenReturn(trajet);
+        
+        TrajetDTO result = trajetService.create(trajetDTO);
+        
+        assertNotNull(result);
+        assertEquals(trajetDTO.getId(), result.getId());
+        verify(trajetRepository, times(1)).save(any(Trajet.class));
+    }
+
+    @Test
+    void testUpdate() {
+        when(trajetRepository.findById(1L)).thenReturn(Optional.of(trajet));
+        when(trajetRepository.save(any(Trajet.class))).thenReturn(trajet);
+        
+        TrajetDTO result = trajetService.update(1L, trajetDTO);
+        
+        assertNotNull(result);
+        assertEquals(trajetDTO.getId(), result.getId());
+        verify(trajetRepository, times(1)).findById(1L);
+        verify(trajetRepository, times(1)).save(any(Trajet.class));
+    }
+
+    @Test
+    void testDelete() {
+        when(trajetRepository.findById(1L)).thenReturn(Optional.of(trajet));
+        doNothing().when(trajetRepository).deleteById(1L);
+        
+        trajetService.delete(1L);
+        
+        verify(trajetRepository, times(1)).findById(1L);
+        verify(trajetRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void testUpdateStatut() {
+        when(trajetRepository.findById(1L)).thenReturn(Optional.of(trajet));
+        when(trajetRepository.save(any(Trajet.class))).thenReturn(trajet);
+        
+        TrajetDTO result = trajetService.updateStatut(1L, StatutTrajet.EN_COURS);
+        
+        assertNotNull(result);
+        assertEquals(StatutTrajet.EN_COURS, result.getStatut());
+        verify(trajetRepository, times(1)).findById(1L);
+        verify(trajetRepository, times(1)).save(any(Trajet.class));
+    }
+}

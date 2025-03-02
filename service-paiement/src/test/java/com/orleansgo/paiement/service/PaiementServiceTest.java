@@ -318,3 +318,188 @@ public class PaiementServiceTest {
         verify(paiementRepository, times(1)).deleteById(1L);
     }
 }
+package com.orleansgo.paiement.service;
+
+import com.orleansgo.paiement.dto.PaiementDTO;
+import com.orleansgo.paiement.model.Paiement;
+import com.orleansgo.paiement.model.StatutPaiement;
+import com.orleansgo.paiement.repository.PaiementRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+public class PaiementServiceTest {
+
+    @Mock
+    private PaiementRepository paiementRepository;
+
+    @InjectMocks
+    private PaiementService paiementService;
+
+    private Paiement paiement;
+    private PaiementDTO paiementDTO;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        paiement = new Paiement();
+        paiement.setId(1L);
+        paiement.setUtilisateurId(100L);
+        paiement.setTrajetId(200L);
+        paiement.setMontant(15.50);
+        paiement.setStatut(StatutPaiement.EN_ATTENTE);
+        paiement.setDateCreation(LocalDateTime.now());
+        paiement.setMethodePaiement("CARTE");
+        paiement.setReference("PAY-REF-12345");
+
+        paiementDTO = new PaiementDTO();
+        paiementDTO.setId(1L);
+        paiementDTO.setUtilisateurId(100L);
+        paiementDTO.setTrajetId(200L);
+        paiementDTO.setMontant(15.50);
+        paiementDTO.setStatut(StatutPaiement.EN_ATTENTE);
+        paiementDTO.setDateCreation(LocalDateTime.now());
+        paiementDTO.setMethodePaiement("CARTE");
+        paiementDTO.setReference("PAY-REF-12345");
+    }
+
+    @Test
+    void testFindAll() {
+        when(paiementRepository.findAll()).thenReturn(Arrays.asList(paiement));
+        
+        List<PaiementDTO> result = paiementService.findAll();
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(paiementDTO.getId(), result.get(0).getId());
+        verify(paiementRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testFindById() {
+        when(paiementRepository.findById(1L)).thenReturn(Optional.of(paiement));
+        
+        PaiementDTO result = paiementService.findById(1L);
+        
+        assertNotNull(result);
+        assertEquals(paiementDTO.getId(), result.getId());
+        verify(paiementRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testFindByUtilisateurId() {
+        when(paiementRepository.findByUtilisateurId(100L)).thenReturn(Arrays.asList(paiement));
+        
+        List<PaiementDTO> result = paiementService.findByUtilisateurId(100L);
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(paiementDTO.getId(), result.get(0).getId());
+        verify(paiementRepository, times(1)).findByUtilisateurId(100L);
+    }
+
+    @Test
+    void testFindByTrajetId() {
+        when(paiementRepository.findByTrajetId(200L)).thenReturn(Arrays.asList(paiement));
+        
+        List<PaiementDTO> result = paiementService.findByTrajetId(200L);
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(paiementDTO.getId(), result.get(0).getId());
+        verify(paiementRepository, times(1)).findByTrajetId(200L);
+    }
+
+    @Test
+    void testCreate() {
+        when(paiementRepository.save(any(Paiement.class))).thenReturn(paiement);
+        
+        PaiementDTO result = paiementService.create(paiementDTO);
+        
+        assertNotNull(result);
+        assertEquals(paiementDTO.getId(), result.getId());
+        verify(paiementRepository, times(1)).save(any(Paiement.class));
+    }
+
+    @Test
+    void testUpdate() {
+        when(paiementRepository.findById(1L)).thenReturn(Optional.of(paiement));
+        when(paiementRepository.save(any(Paiement.class))).thenReturn(paiement);
+        
+        PaiementDTO updated = new PaiementDTO();
+        updated.setId(1L);
+        updated.setMontant(20.0);
+        
+        PaiementDTO result = paiementService.update(1L, updated);
+        
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        verify(paiementRepository, times(1)).findById(1L);
+        verify(paiementRepository, times(1)).save(any(Paiement.class));
+    }
+
+    @Test
+    void testConfirmerPaiement() {
+        paiement.setStatut(StatutPaiement.COMPLETE);
+        when(paiementRepository.findById(1L)).thenReturn(Optional.of(paiement));
+        when(paiementRepository.save(any(Paiement.class))).thenReturn(paiement);
+        
+        PaiementDTO result = paiementService.confirmerPaiement(1L);
+        
+        assertNotNull(result);
+        assertEquals(StatutPaiement.COMPLETE, result.getStatut());
+        verify(paiementRepository, times(1)).findById(1L);
+        verify(paiementRepository, times(1)).save(any(Paiement.class));
+    }
+
+    @Test
+    void testAnnulerPaiement() {
+        paiement.setStatut(StatutPaiement.ANNULE);
+        when(paiementRepository.findById(1L)).thenReturn(Optional.of(paiement));
+        when(paiementRepository.save(any(Paiement.class))).thenReturn(paiement);
+        
+        PaiementDTO result = paiementService.annulerPaiement(1L);
+        
+        assertNotNull(result);
+        assertEquals(StatutPaiement.ANNULE, result.getStatut());
+        verify(paiementRepository, times(1)).findById(1L);
+        verify(paiementRepository, times(1)).save(any(Paiement.class));
+    }
+
+    @Test
+    void testRembourserPaiement() {
+        paiement.setStatut(StatutPaiement.REMBOURSE);
+        when(paiementRepository.findById(1L)).thenReturn(Optional.of(paiement));
+        when(paiementRepository.save(any(Paiement.class))).thenReturn(paiement);
+        
+        PaiementDTO result = paiementService.rembourserPaiement(1L);
+        
+        assertNotNull(result);
+        assertEquals(StatutPaiement.REMBOURSE, result.getStatut());
+        verify(paiementRepository, times(1)).findById(1L);
+        verify(paiementRepository, times(1)).save(any(Paiement.class));
+    }
+
+    @Test
+    void testDelete() {
+        when(paiementRepository.findById(1L)).thenReturn(Optional.of(paiement));
+        doNothing().when(paiementRepository).deleteById(1L);
+        
+        paiementService.delete(1L);
+        
+        verify(paiementRepository, times(1)).findById(1L);
+        verify(paiementRepository, times(1)).deleteById(1L);
+    }
+}

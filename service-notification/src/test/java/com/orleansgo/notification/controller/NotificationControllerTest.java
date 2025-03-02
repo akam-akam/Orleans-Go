@@ -288,3 +288,151 @@ public class NotificationControllerTest {
         verify(notificationService, times(1)).deleteNotification(anyLong());
     }
 }
+package com.orleansgo.notification.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.orleansgo.notification.dto.NotificationDTO;
+import com.orleansgo.notification.model.TypeNotification;
+import com.orleansgo.notification.service.NotificationService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(NotificationController.class)
+public class NotificationControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private NotificationService notificationService;
+
+    private NotificationDTO notificationDTO;
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void setUp() {
+        notificationDTO = new NotificationDTO();
+        notificationDTO.setId(1L);
+        notificationDTO.setUtilisateurId(100L);
+        notificationDTO.setType(TypeNotification.EMAIL);
+        notificationDTO.setContenu("Nouveau message: votre trajet commence bientôt");
+        notificationDTO.setDateCreation(LocalDateTime.now());
+        notificationDTO.setLu(false);
+    }
+
+    @Test
+    void testGetAllNotifications() throws Exception {
+        when(notificationService.findAll()).thenReturn(Arrays.asList(notificationDTO));
+
+        mockMvc.perform(get("/api/notifications")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(notificationDTO.getId()));
+    }
+
+    @Test
+    void testGetNotificationById() throws Exception {
+        when(notificationService.findById(1L)).thenReturn(notificationDTO);
+
+        mockMvc.perform(get("/api/notifications/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(notificationDTO.getId()));
+    }
+
+    @Test
+    void testGetNotificationsByUserId() throws Exception {
+        when(notificationService.findByUtilisateurId(100L)).thenReturn(Arrays.asList(notificationDTO));
+
+        mockMvc.perform(get("/api/notifications/user/100")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(notificationDTO.getId()));
+    }
+
+    @Test
+    void testCreateNotification() throws Exception {
+        when(notificationService.create(any(NotificationDTO.class))).thenReturn(notificationDTO);
+
+        mockMvc.perform(post("/api/notifications")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(notificationDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(notificationDTO.getId()));
+    }
+
+    @Test
+    void testMarkAsRead() throws Exception {
+        notificationDTO.setLu(true);
+        when(notificationService.markAsRead(1L)).thenReturn(notificationDTO);
+
+        mockMvc.perform(put("/api/notifications/1/read")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lu").value(true));
+    }
+
+    @Test
+    void testDeleteNotification() throws Exception {
+        mockMvc.perform(delete("/api/notifications/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testSendEmail() throws Exception {
+        when(notificationService.sendEmail(anyString(), anyString(), anyString(), anyLong())).thenReturn(notificationDTO);
+
+        mockMvc.perform(post("/api/notifications/email")
+                .contentType(MediaType.APPLICATION_JSON)
+                .param("to", "test@example.com")
+                .param("subject", "Test Subject")
+                .param("body", "Test Body")
+                .param("userId", "100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(notificationDTO.getId()));
+    }
+
+    @Test
+    void testSendSMS() throws Exception {
+        when(notificationService.sendSMS(anyString(), anyString(), anyLong())).thenReturn(notificationDTO);
+
+        mockMvc.perform(post("/api/notifications/sms")
+                .contentType(MediaType.APPLICATION_JSON)
+                .param("phoneNumber", "+33612345678")
+                .param("message", "Test Message")
+                .param("userId", "100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(notificationDTO.getId()));
+    }
+
+    @Test
+    void testSendPush() throws Exception {
+        when(notificationService.sendPush(anyString(), anyString(), anyString(), anyLong())).thenReturn(notificationDTO);
+
+        mockMvc.perform(post("/api/notifications/push")
+                .contentType(MediaType.APPLICATION_JSON)
+                .param("token", "device-token-123")
+                .param("title", "Test Title")
+                .param("message", "Test Message")
+                .param("userId", "100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(notificationDTO.getId()));
+    }
+}
